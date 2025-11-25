@@ -14,7 +14,7 @@ export async function GET() {
   where: {
     id: { not: currentUser!.id },
     age: { gte: 18 },
-    photos: { isNot: { equals: [] } },
+    photos: { isNot: [] },
     ethnicity: currentUser!.preferEthnicity === "all" 
   ? undefined 
   : { equals: currentUser!.preferEthnicity },
