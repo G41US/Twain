@@ -11,13 +11,16 @@ export async function GET() {
   });
 
  const candidates = await prisma.user.findMany({
-  where: {
-    id: { not: currentUser!.id },
-    age: { gte: 18 },
-    photos: { isNot: [] },
-    ethnicity: currentUser!.preferEthnicity === "all" 
-  ? undefined 
-  : { equals: currentUser!.preferEthnicity },
+ where: {
+  id: { not: currentUser!.id },
+  age: { gte: 18 },
+  photos: { isEmpty: false },
+  ethnicity:
+    currentUser!.preferEthnicity === "all"
+      ? undefined
+      : { equals: currentUser!.preferEthnicity },
+}
+
     ...(currentUser!.dealbreakers.length > 0 && {
       NOT: {
         dealbreakers: {
