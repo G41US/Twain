@@ -12,5 +12,5 @@ export async function GET() {
     },
   });
 
-  return Response.json(matches.map(m => m.user1Id === session.user.id ? m.user2 : m.user1));
+  return Response.json(matches.map((m: any) => m.user1Id === session.user.id ? m.user2 : m.user1));
 }
