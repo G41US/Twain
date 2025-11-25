@@ -1,9 +1,8 @@
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
   const { targetId } = await req.json();
@@ -13,7 +12,7 @@ export async function POST(req: Request) {
     data: { likerId: session.user.id, likedId: targetId },
   });
 
-  // Check for mutual like
+  // Check mutual
   const mutual = await prisma.like.findFirst({
     where: { likerId: targetId, likedId: session.user.id },
   });
