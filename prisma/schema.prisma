@@ -10,6 +10,7 @@ datasource db {
 model Account {
   id                String  @id @default(cuid())
   userId            String
+  type              String
   provider          String
   providerAccountId String
   refresh_token     String? @db.Text
@@ -19,41 +20,42 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model User {
-  id               String    @id @default(cuid())
-  name             String?
-  email            String?   @unique
-  emailVerified    DateTime?
-  image            String?
-  bio              String?
-  voiceIntroUrl    String?   // 30-sec voice note
-  age              Int?
-  gender           String?
-  lookingFor       String?
-  ethnicity        String?
-  preferEthnicity  String?   @default("all")
-  latitude         Float?
-  longitude        Float?
-  photos           String[]  @default([])
-  dealbreakers     String[]  @default([]) // e.g. ["smoker", "wants-kids"]
-  vibeAnswers      Json?     // { "pineapple": true, ... }
-  replyRate        Float     @default(0)   // 0–100 Anti-Ghosting Score
-  messagesSent     Int       @default(0)
-  messagesReplied  Int       @default(0)
-  isAdmin          Boolean   @default(false)
-  createdAt        DateTime  @default(now())
-  accounts         Account[]
-  likesGiven       Like[]    @relation("LikesGiven")
-  likesReceived    Like[]    @relation("LikesReceived")
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  age             Int?
+  bio             String?   @db.VarChar(500)
+  gender          String?   @db.VarChar(50)
+  lookingFor      String?   @db.VarChar(50)
+  ethnicity       String?   @db.VarChar(50)
+  preferEthnicity String?   @default("all") @db.VarChar(50)
+  photos          String[]  // URLs
+  voiceIntroUrl   String?
+  dealbreakers    String[]
+  vibeAnswers     Json?
+  replyRate       Float?    @default(0)
+  isAdmin         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts Account[]
+  likesGiven Like[]     @relation("LikesGiven")
+  likesReceived Like[]  @relation("LikesReceived")
   matchesAsUser1 Match[] @relation("MatchUser1")
-   matchesAsUser2 Match[] @relation("MatchUser2")
-  messagesSentObj  Message[] @relation("SentMessages")
-  messagesReceived Message[] @relation("ReceivedMessages")
+  matchesAsUser2 Match[] @relation("MatchUser2")
+
+  @@index([email])
+  @@index([age])
+  @@index([ethnicity])
 }
 
 model Like {
@@ -61,8 +63,9 @@ model Like {
   likerId   String
   likedId   String
   createdAt DateTime @default(now())
-  liker     User     @relation("LikesGiven", fields: [likerId], references: [id])
-  liked     User     @relation("LikesReceived", fields: [likedId], references: [id])
+
+  liker User @relation("LikesGiven", fields: [likerId], references: [id])
+  liked User @relation("LikesReceived", fields: [likedId], references: [id])
 
   @@unique([likerId, likedId])
 }
@@ -73,19 +76,8 @@ model Match {
   user2Id   String
   createdAt DateTime @default(now())
 
-  // Fixed: two different relation names
-  user1     User     @relation("MatchUser1", fields: [user1Id], references: [id])
-  user2     User     @relation("MatchUser2", fields: [user2Id], references: [id])
+  user1 User @relation("MatchUser1", fields: [user1Id], references: [id])
+  user2 User @relation("MatchUser2", fields: [user2Id], references: [id])
 
   @@unique([user1Id, user2Id])
-}
-
-model Message {
-  id        String   @id @default(cuid())
-  matchId   String
-  senderId  String
-  content   String
-  createdAt DateTime @default(now())
-  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver  User     @relation("ReceivedMessages", fields: [matchId], references: [id]) // simplified
 }
