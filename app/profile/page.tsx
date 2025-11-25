@@ -44,8 +44,8 @@ export default function Profile() {
     vibeQuestions.forEach(q => {
       vibeAnswers[q] = (formData.get(q.replace(/ /g, "_")) as string) === "on";
     });
-    const dealbreakers = Array.from(e.currentTarget.querySelectorAll('input[name="dealbreakers"]:checked'))
-      .map((i: HTMLInputElement) => i.value);
+    const dealbreakers = Array.from(e.currentTarget.querySelectorAll('input[name="dealbreakers"]:checked') as NodeListOf<HTMLInputElement>)
+  .map(i => i.value);
 
     await fetch("/api/profile", {
       method: "POST",
