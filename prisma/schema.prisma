@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String?   @unique
+  emailVerified    DateTime?
+  image            String?
+  bio              String?
+  voiceIntroUrl    String?   // 30-sec voice note
+  age              Int?
+  gender           String?
+  lookingFor       String?
+  ethnicity        String?
+  preferEthnicity  String?   @default("all")
+  latitude         Float?
+  longitude        Float?
+  photos           String[]  @default([])
+  dealbreakers     String[]  @default([]) // e.g. ["smoker", "wants-kids"]
+  vibeAnswers      Json?     // { "pineapple": true, ... }
+  replyRate        Float     @default(0)   // 0–100 Anti-Ghosting Score
+  messagesSent     Int       @default(0)
+  messagesReplied  Int       @default(0)
+  isAdmin          Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  accounts         Account[]
+  likesGiven       Like[]    @relation("LikesGiven")
+  likesReceived    Like[]    @relation("LikesReceived")
+  matches          Match[]   @relation("UserMatches")
+  messagesSentObj  Message[] @relation("SentMessages")
+  messagesReceived Message[] @relation("ReceivedMessages")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  likerId   String
+  likedId   String
+  createdAt DateTime @default(now())
+  liker     User     @relation("LikesGiven", fields: [likerId], references: [id])
+  liked     User     @relation("LikesReceived", fields: [likedId], references: [id])
+
+  @@unique([likerId, likedId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  createdAt DateTime @default(now())
+  user1     User     @relation("UserMatches", fields: [user1Id], references: [id])
+  user2     User     @relation("UserMatches", fields: [user2Id], references: [id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  matchId   String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver  User     @relation("ReceivedMessages", fields: [matchId], references: [id]) // simplified
+}
