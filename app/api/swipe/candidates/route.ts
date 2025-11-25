@@ -20,13 +20,16 @@ export async function GET() {
     where: {
       id: { not: currentUser.id },
       age: { gte: 18 },
-      // Non-empty photos (100% valid Prisma syntax)
-      photos: { not: { equals: [] } },
+
+      // ✔ FIXED: Correct Prisma syntax for non-empty string[] fields
+      photos: { isEmpty: false },
+
       // Ethnicity preference
       ...(currentUser.preferEthnicity !== "all" && {
         ethnicity: { equals: currentUser.preferEthnicity },
       }),
-      // Dealbreakers: hide anyone who has any of my dealbreakers
+
+      // Dealbreakers: exclude anyone who has *any* of the current user's dealbreakers
       ...(currentUser.dealbreakers.length > 0 && {
         NOT: {
           dealbreakers: {
@@ -35,6 +38,7 @@ export async function GET() {
         },
       }),
     },
+
     select: {
       id: true,
       name: true,
@@ -45,6 +49,7 @@ export async function GET() {
       replyRate: true,
       dealbreakers: true,
     },
+
     take: 50,
   });
 
