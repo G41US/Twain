@@ -50,7 +50,8 @@ model User {
   accounts         Account[]
   likesGiven       Like[]    @relation("LikesGiven")
   likesReceived    Like[]    @relation("LikesReceived")
-  matches          Match[]   @relation("UserMatches")
+  matchesAsUser1 Match[] @relation("MatchUser1")
+   matchesAsUser2 Match[] @relation("MatchUser2")
   messagesSentObj  Message[] @relation("SentMessages")
   messagesReceived Message[] @relation("ReceivedMessages")
 }
@@ -71,8 +72,12 @@ model Match {
   user1Id   String
   user2Id   String
   createdAt DateTime @default(now())
-  user1     User     @relation("UserMatches", fields: [user1Id], references: [id])
-  user2     User     @relation("UserMatches", fields: [user2Id], references: [id])
+
+  // Fixed: two different relation names
+  user1     User     @relation("MatchUser1", fields: [user1Id], references: [id])
+  user2     User     @relation("MatchUser2", fields: [user2Id], references: [id])
+
+  @@unique([user1Id, user2Id])
 }
 
 model Message {
