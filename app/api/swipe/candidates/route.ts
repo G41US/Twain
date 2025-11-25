@@ -10,37 +10,40 @@ export async function GET() {
     select: { id: true, preferEthnicity: true, dealbreakers: true, vibeAnswers: true },
   });
 
- const candidates = await prisma.user.findMany({
- where: {
-  id: { not: currentUser!.id },
-  age: { gte: 18 },
-  photos: { isEmpty: false },
-  ethnicity:
-    currentUser!.preferEthnicity === "all"
-      ? undefined
-      : { equals: currentUser!.preferEthnicity },
-}
+  const candidates = await prisma.user.findMany({
+    where: {
+      id: { not: currentUser!.id },
+      age: { gte: 18 },
+      photos: { isEmpty: false },
+      ethnicity:
+        currentUser!.preferEthnicity === "all"
+          ? undefined
+          : { equals: currentUser!.preferEthnicity },
 
-    ...(currentUser!.dealbreakers.length > 0 && {
-      NOT: {
-        dealbreakers: {
-          hasSome: currentUser!.dealbreakers
-        }
-      }
-    })
-  },
-  select: {
-    id: true,
-    name: true,
-    age: true,
-    bio: true,
-    photos: true,
-    voiceIntroUrl: true,
-    replyRate: true,
-    dealbreakers: true,
-  },
-  take: 50,
-});
+      ...(currentUser!.dealbreakers.length > 0
+        ? {
+            NOT: {
+              dealbreakers: {
+                hasSome: currentUser!.dealbreakers,
+              },
+            },
+          }
+        : {}),
+    },
+
+    select: {
+      id: true,
+      name: true,
+      age: true,
+      bio: true,
+      photos: true,
+      voiceIntroUrl: true,
+      replyRate: true,
+      dealbreakers: true,
+    },
+
+    take: 50,
+  });
 
   return Response.json(candidates);
 }
