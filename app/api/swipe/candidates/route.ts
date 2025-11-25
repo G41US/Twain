@@ -14,10 +14,10 @@ export async function GET() {
   where: {
     id: { not: currentUser!.id },
     age: { gte: 18 },
-    photos: { not: { equals: [] } },
+    photos: { isNot: { equals: [] } },
     ethnicity: currentUser!.preferEthnicity === "all" 
-      ? undefined 
-      : { equals: currentUser!.preferEthnicity },
+  ? undefined 
+  : { equals: currentUser!.preferEthnicity },
     ...(currentUser!.dealbreakers.length > 0 && {
       NOT: {
         dealbreakers: {
