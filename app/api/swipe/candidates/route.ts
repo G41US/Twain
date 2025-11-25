@@ -14,11 +14,19 @@ export async function GET() {
     where: {
   id: { not: currentUser!.id },
   age: { gte: 18 },
-  photos: { not: { equals: [] } },
-  ethnicity: currentUser!.preferEthnicity === "all" ? undefined : currentUser!.preferEthnicity,
-  dealbreakers: currentUser!.dealbreakers.length > 0 
-    ? { not: { hasSome: currentUser!.dealbreakers } } 
-    : undefined,
+  photos: { not: { equals: [] } },                // fixed
+  ethnicity: currentUser!.preferEthnicity === "all" 
+    ? undefined 
+    : currentUser!.preferEthnicity,
+  AND: currentUser!.dealbreakers.length > 0
+    ? [
+        {
+          NOT: {
+            dealbreakers: { hasSome: currentUser!.dealbreakers }
+          }
+        }
+      ]
+    : [],
 },
     select: {
       id: true, name: true, age: true, bio: true, photos: true, voiceIntroUrl: true,
