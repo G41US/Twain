@@ -3,30 +3,44 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
+type MatchItem = {
+  matchId: string;
+  user: { id: string; name: string | null; photos: string[]; image: string | null };
+  lastMessage: string | null;
+};
+
 export default function Matches() {
-  const { data: session } = useSession();
-  const [matches, setMatches] = useState([]);
+  const { status } = useSession();
+  const [matches, setMatches] = useState<MatchItem[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/matches").then(r => r.json()).then(setMatches);
-  }, [session]);
+    if (status === "authenticated") fetch("/api/matches").then((r) => (r.ok ? r.json() : [])).then(setMatches);
+  }, [status]);
 
-  if (!session) return <p>Please sign in</p>;
+  if (status === "unauthenticated") return <p className="p-8 text-center">Please <Link href="/" className="text-primary underline">sign in</Link></p>;
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">Your Matches</h1>
-      <div className="grid gap-6">
-        {matches.map((m: any) => (
-          <div key={m.id} className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-2xl font-bold">{m.name}</h3>
-            <p className="text-gray-600">{m.bio}</p>
-            <Link href={`/chat/${m.id}`} className="bg-pink-600 text-white px-6 py-2 rounded-lg mt-4 inline-block">
-              Start Chat
+    <main className="mx-auto max-w-md px-4 pt-6">
+      <h1 className="mb-4 text-3xl font-bold">Matches</h1>
+      {matches === null && <p className="text-gray-500">Loading…</p>}
+      {matches?.length === 0 && <p className="text-gray-500">No matches yet — keep swiping!</p>}
+      <ul className="divide-y rounded-2xl bg-white shadow">
+        {matches?.map((m) => (
+          <li key={m.matchId}>
+            <Link href={`/chat/${m.matchId}`} className="flex items-center gap-3 p-4 active:bg-gray-50">
+              <img
+                src={m.user.photos[0] || m.user.image || "https://placehold.co/96?text=?"}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-full object-cover"
+              />
+              <div className="min-w-0">
+                <p className="font-semibold">{m.user.name}</p>
+                <p className="truncate text-sm text-gray-500">{m.lastMessage ?? "Say hi 👋"}</p>
+              </div>
             </Link>
-          </div>
+          </li>
         ))}
-      </div>
-    </div>
+      </ul>
+    </main>
   );
 }

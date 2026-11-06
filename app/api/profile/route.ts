@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -12,6 +11,7 @@ const ProfileInput = z
     lookingFor: z.string().max(50),
     ethnicity: z.string().max(50).nullable(),
     preferEthnicity: z.string().max(50),
+    photos: z.array(z.string().url()).max(6),
     voiceIntroUrl: z.union([z.string().url(), z.literal("")]),
     vibeAnswers: z.record(z.boolean()),
     dealbreakers: z.array(z.string().max(50)).max(20),
@@ -19,17 +19,20 @@ const ProfileInput = z
   .partial()
   .strict();
 
+export async function GET() {
+  const me = await getCurrentUser();
+  if (!me) return new Response("Unauthorized", { status: 401 });
+  const { banned, lastActiveAt, emailVerified, ...profile } = me;
+  return Response.json(profile);
+}
+
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+  const me = await getCurrentUser();
+  if (!me) return new Response("Unauthorized", { status: 401 });
 
   const parsed = ProfileInput.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json(parsed.error.flatten(), { status: 400 });
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: parsed.data,
-  });
-
+  await prisma.user.update({ where: { id: me.id }, data: parsed.data });
   return new Response("OK");
 }

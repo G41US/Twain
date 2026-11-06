@@ -1,49 +1,30 @@
 "use client";
 
-import { signIn, signOut, useSession } from "next-auth/react";
-import Link from "next/link";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { status } = useSession();
+  const router = useRouter();
 
-  if (session) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-4xl font-bold mb-8">
-          Welcome back, {session.user?.name}!
-        </h1>
-        <div className="space-x-4">
-          <Link href="/profile" className="bg-blue-600 text-white px-6 py-3 rounded-lg">
-            Profile
-          </Link>
-          <Link href="/swipe" className="bg-pink-600 text-white px-6 py-3 rounded-lg">
-            Swipe
-          </Link>
-          <Link href="/matches" className="bg-green-600 text-white px-6 py-3 rounded-lg">
-            Matches
-          </Link>
-          {session.user.isAdmin && (
-            <Link href="/admin" className="bg-red-600 text-white px-6 py-3 rounded-lg">
-              Admin
-            </Link>
-          )}
-          <button onClick={() => signOut()} className="bg-gray-600 text-white px-6 py-3 rounded-lg">
-            Sign Out
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/swipe");
+  }, [status, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-4xl font-bold mb-8">Find Your Match in 2026</h1>
+    <main className="flex min-h-[calc(100dvh-env(safe-area-inset-top))] flex-col items-center justify-center bg-gradient-to-b from-pink-100 to-purple-100 px-6 text-center">
+      <h1 className="text-5xl font-extrabold text-primary">Twain</h1>
+      <p className="mt-3 max-w-xs text-lg text-gray-700">
+        Voice intros, vibe checks, and people who actually reply.
+      </p>
       <button
-        onClick={() => signIn("google")}
-        className="bg-red-600 text-white px-8 py-4 rounded-full text-xl"
+        onClick={() => signIn("google", { callbackUrl: "/swipe" })}
+        disabled={status === "loading"}
+        className="mt-10 w-full max-w-xs rounded-full bg-primary py-4 text-lg font-semibold text-white shadow-lg disabled:opacity-60"
       >
         Sign in with Google
       </button>
-    </div>
+    </main>
   );
 }

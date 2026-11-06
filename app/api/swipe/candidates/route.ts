@@ -1,45 +1,29 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { genderFilter, vibeScore } from "@/lib/matching";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
-
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      dealbreakers: true,
-      preferEthnicity: true,
-    },
-  });
-
-  if (!currentUser) return new Response("User not found", { status: 404 });
+  const me = await getCurrentUser();
+  if (!me) return new Response("Unauthorized", { status: 401 });
+  if (!me.gender || !me.lookingFor) return new Response("Complete your profile first", { status: 409 });
 
   const candidates = await prisma.user.findMany({
     where: {
-      id: { not: currentUser.id },
+      id: { not: me.id },
       age: { gte: 18 },
+      banned: false,
+      ...genderFilter(me),
 
-      // Skip people I've already liked.
-      likesReceived: { none: { likerId: currentUser.id } },
+      // Skip people I've already liked, and anyone blocked in either direction.
+      likesReceived: { none: { likerId: me.id } },
+      blocksMade: { none: { blockedId: me.id } },
+      blocksReceived: { none: { blockerId: me.id } },
 
-      // Ethnicity preference
-      ...(currentUser.preferEthnicity && currentUser.preferEthnicity !== "all" && {
-        ethnicity: { equals: currentUser.preferEthnicity },
-      }),
+      ...(me.preferEthnicity && me.preferEthnicity !== "all" && { ethnicity: me.preferEthnicity }),
 
-      // Dealbreakers: exclude anyone who has *any* of the current user's dealbreakers
-      ...(currentUser.dealbreakers.length > 0 && {
-        NOT: {
-          dealbreakers: {
-            hasSome: currentUser.dealbreakers,
-          },
-        },
-      }),
+      // Dealbreakers: exclude anyone who has *any* of my dealbreakers
+      ...(me.dealbreakers.length > 0 && { NOT: { dealbreakers: { hasSome: me.dealbreakers } } }),
     },
-
     select: {
       id: true,
       name: true,
@@ -50,10 +34,15 @@ export async function GET() {
       voiceIntroUrl: true,
       replyRate: true,
       dealbreakers: true,
+      vibeAnswers: true,
     },
-
     take: 50,
   });
 
-  return Response.json(candidates);
+  return Response.json(
+    candidates.map(({ vibeAnswers, ...c }) => ({
+      ...c,
+      vibe: vibeScore(me.vibeAnswers as Record<string, boolean>, vibeAnswers as Record<string, boolean>),
+    })),
+  );
 }
