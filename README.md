@@ -18,4 +18,7 @@ A modern, full-stack dating app built with Next.js 15, Prisma, and Vercel. Featu
 
 Deploy to Vercel for free. See /admin for God mode.
 
+Run database migrations from your own machine (`npx prisma db push`), never from a public URL.
+To make someone an admin, set it in the database yourself: `UPDATE "User" SET "isAdmin" = true WHERE email = 'you@example.com';`
+
 Built with ❤️ by [Gaius] — the future of dating.

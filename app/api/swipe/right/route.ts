@@ -5,11 +5,14 @@ export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
-  const { targetId } = await req.json();
+  const { targetId } = await req.json().catch(() => ({}));
+  if (typeof targetId !== "string" || targetId === session.user.id) return new Response("Invalid target", { status: 400 });
 
-  // Create like
-  await prisma.like.create({
-    data: { likerId: session.user.id, likedId: targetId },
+  // Create like (upsert: liking twice is a no-op, not a 500)
+  await prisma.like.upsert({
+    where: { likerId_likedId: { likerId: session.user.id, likedId: targetId } },
+    create: { likerId: session.user.id, likedId: targetId },
+    update: {},
   });
 
   // Check mutual

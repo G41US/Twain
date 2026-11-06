@@ -1,5 +1,10 @@
+import { getServerSession } from "next-auth";
+
 export async function POST(req: Request) {
-  const { context } = await req.json();
+  // signed-in users only, and capped, so nobody can run up the AI bill once the Grok call is switched on
+  if (!(await getServerSession())) return new Response("Unauthorized", { status: 401 });
+  const { context } = await req.json().catch(() => ({}));
+  if (typeof context !== "string" || context.length > 1000) return new Response("Invalid context", { status: 400 });
 
   // Placeholder for Grok API - add your key in .env
   const reply = `Hey! Based on "${context}", how about: "Your voice intro had me hooked – what's your go-to karaoke song? 🎤"`;
