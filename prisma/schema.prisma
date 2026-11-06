@@ -125,3 +125,12 @@ model Report {
   reporter User @relation("ReportsMade", fields: [reporterId], references: [id])
   reported User @relation("ReportsReceived", fields: [reportedId], references: [id])
 }
+
+// One-time permission to upload a single file to Supabase Storage (see lib/supabase.ts).
+model UploadTicket {
+  path      String   @id
+  userId    String
+  expiresAt DateTime
+
+  @@index([userId, expiresAt])
+}

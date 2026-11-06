@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useUploadThing } from "@/lib/uploadthing-client";
+import { uploadFile } from "@/lib/supabase";
 
 const vibeQuestions = [
   "Pineapple on pizza is elite",
@@ -46,9 +46,9 @@ export default function Profile() {
   const [voiceUrl, setVoiceUrl] = useState("");
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingVoice, setUploadingVoice] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
-  const photoUpload = useUploadThing("photo");
-  const voiceUpload = useUploadThing("voice");
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -62,9 +62,15 @@ export default function Profile() {
   const addPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
     const picked = Array.from(files).slice(0, MAX_PHOTOS - photos.length);
-    const res = await photoUpload.startUpload(picked).catch(() => undefined);
-    if (!res) return alert("Photo upload failed. Use JPG/PNG under 4MB.");
-    setPhotos((p) => [...p, ...res.map((f) => f.ufsUrl)].slice(0, MAX_PHOTOS));
+    setUploadingPhoto(true);
+    try {
+      const urls = await Promise.all(picked.map((f) => uploadFile("photo", f)));
+      setPhotos((p) => [...p, ...urls].slice(0, MAX_PHOTOS));
+    } catch {
+      alert("Photo upload failed. Use a JPG, PNG or WebP under 4MB.");
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const startRecording = async () => {
@@ -82,9 +88,14 @@ export default function Profile() {
       setRecording(false);
       const type = r.mimeType.split(";")[0] || "audio/webm";
       const file = new File(chunks, `voice-intro.${type.includes("mp4") ? "m4a" : "webm"}`, { type });
-      const res = await voiceUpload.startUpload([file]).catch(() => undefined);
-      if (res?.[0]) setVoiceUrl(res[0].ufsUrl);
-      else alert("Voice upload failed — try again.");
+      setUploadingVoice(true);
+      try {
+        setVoiceUrl(await uploadFile("voice", file));
+      } catch {
+        alert("Voice upload failed — try again.");
+      } finally {
+        setUploadingVoice(false);
+      }
     };
     r.start();
     recorder.current = r;
@@ -147,9 +158,9 @@ export default function Profile() {
             ))}
             {photos.length < MAX_PHOTOS && (
               <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-gray-500">
-                <span className="text-3xl">{photoUpload.isUploading ? "…" : "+"}</span>
-                <span className="text-xs">{photoUpload.isUploading ? "Uploading" : "Add photo"}</span>
-                <input type="file" accept="image/*" multiple className="sr-only" disabled={photoUpload.isUploading} onChange={(e) => addPhotos(e.target.files)} />
+                <span className="text-3xl">{uploadingPhoto ? "…" : "+"}</span>
+                <span className="text-xs">{uploadingPhoto ? "Uploading" : "Add photo"}</span>
+                <input type="file" accept="image/*" multiple className="sr-only" disabled={uploadingPhoto} onChange={(e) => addPhotos(e.target.files)} />
               </label>
             )}
           </div>
@@ -163,8 +174,8 @@ export default function Profile() {
               ⏹ Stop recording
             </button>
           ) : (
-            <button type="button" onClick={startRecording} disabled={voiceUpload.isUploading} className="w-full rounded-full bg-red-600 py-3 font-semibold text-white disabled:opacity-60">
-              {voiceUpload.isUploading ? "Uploading…" : voiceUrl ? "🎙 Re-record" : "🎙 Record voice intro"}
+            <button type="button" onClick={startRecording} disabled={uploadingVoice} className="w-full rounded-full bg-red-600 py-3 font-semibold text-white disabled:opacity-60">
+              {uploadingVoice ? "Uploading…" : voiceUrl ? "🎙 Re-record" : "🎙 Record voice intro"}
             </button>
           )}
         </section>
@@ -223,7 +234,7 @@ export default function Profile() {
           })}
         </section>
 
-        <button type="submit" disabled={saving || photoUpload.isUploading || voiceUpload.isUploading} className="w-full rounded-full bg-gradient-to-r from-pink-600 to-purple-600 py-4 text-lg font-bold text-white disabled:opacity-60">
+        <button type="submit" disabled={saving || uploadingPhoto || uploadingVoice} className="w-full rounded-full bg-gradient-to-r from-pink-600 to-purple-600 py-4 text-lg font-bold text-white disabled:opacity-60">
           {saving ? "Saving…" : "Save & start swiping 🚀"}
         </button>
       </form>

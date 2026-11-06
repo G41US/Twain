@@ -13,11 +13,12 @@ A modern, full-stack dating app built with Next.js 15, Prisma, and Vercel. Featu
 1. Clone: `git clone https://github.com/G41US/Twain.git`
 2. Install: `npm install`
 3. Copy `.env.example` to `.env` and fill it in:
-   - `DATABASE_URL` — Supabase Postgres (free)
+   - `DATABASE_URL` — Supabase Postgres (free). On Vercel use the **Transaction pooler**
+     string from Supabase → Connect, with `?pgbouncer=true` added to the end.
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-   - `UPLOADTHING_TOKEN` — needed for photo and voice uploads
    - `WINGMAN_API_KEY` — optional, turns on the ✨ AI wingman
-4. Create tables: `npm run db:push`
+4. Create tables: `npm run db:push`. On a **new** Supabase project, then run
+   `supabase/storage-and-security.sql` in the SQL Editor (photo/voice storage + locks the public API).
 5. Run: `npm run dev`
 
 ### Try it without Google
