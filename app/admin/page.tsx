@@ -1,8 +1,9 @@
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export default async function Admin() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) return <div className="p-8">Access denied.</div>;
 
   const users = await prisma.user.findMany({ take: 50 });

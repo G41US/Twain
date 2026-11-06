@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
 
   const currentUser = await prisma.user.findUnique({
@@ -21,11 +22,11 @@ export async function GET() {
       id: { not: currentUser.id },
       age: { gte: 18 },
 
-      // ✔ FIXED: Correct Prisma syntax for non-empty string[] fields
-      photos: { isEmpty: false },
+      // Skip people I've already liked.
+      likesReceived: { none: { likerId: currentUser.id } },
 
       // Ethnicity preference
-      ...(currentUser.preferEthnicity !== "all" && {
+      ...(currentUser.preferEthnicity && currentUser.preferEthnicity !== "all" && {
         ethnicity: { equals: currentUser.preferEthnicity },
       }),
 
@@ -45,6 +46,7 @@ export async function GET() {
       age: true,
       bio: true,
       photos: true,
+      image: true,
       voiceIntroUrl: true,
       replyRate: true,
       dealbreakers: true,

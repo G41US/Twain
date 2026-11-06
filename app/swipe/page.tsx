@@ -8,6 +8,7 @@ type Profile = {
   age?: number;
   bio?: string;
   photos?: string[];
+  image?: string | null;
   voiceIntroUrl?: string;
   replyRate?: number;
   dealbreakers?: string[];
@@ -28,8 +29,9 @@ export default function Swipe() {
 
   const swipe = async (direction: 'left' | 'right') => {
     const targetId = profiles[current]?.id;
-    if (targetId) {
-      await fetch(`/api/swipe/${direction}`, {
+    // shortcut: passes aren't stored, so passed profiles return next visit; add a Pass model if that matters.
+    if (targetId && direction === 'right') {
+      await fetch("/api/swipe/right", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetId }),
@@ -47,7 +49,7 @@ export default function Swipe() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-pink-100 to-purple-100 p-4">
       <div className="relative w-96 h-[600px] bg-white rounded-3xl shadow-2xl overflow-hidden">
         <img 
-          src={profile.photos?.[0] || "https://via.placeholder.com/384x600?text=No+Photo"} 
+          src={profile.photos?.[0] || profile.image || "https://via.placeholder.com/384x600?text=No+Photo"} 
           alt="Profile" 
           className="w-full h-full object-cover"
         />
