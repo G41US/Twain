@@ -35,3 +35,30 @@ export function calcReplyRate(userId: string, conversations: string[][]): number
   }
   return received === 0 ? null : Math.round((100 * replied) / received);
 }
+
+/** Great-circle distance in km. */
+export function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLng = (lng2 - lng1) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/** Lat/lng range that contains every point within `km` (cheap pre-filter before distanceKm). */
+export function boundingBox(lat: number, lng: number, km: number) {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
+  return { latitude: { gte: lat - dLat, lte: lat + dLat }, longitude: { gte: lng - dLng, lte: lng + dLng } };
+}
+
+/** Round to 2 decimals (~1 km) so exact home locations are never stored. */
+export const roundCoord = (n: number) => Math.round(n * 100) / 100;
+
+/** True if neither person has a trait the other listed as a dealbreaker. */
+export function dealbreakersOk(
+  a: { traits: string[]; dealbreakers: string[] },
+  b: { traits: string[]; dealbreakers: string[] },
+): boolean {
+  return !a.dealbreakers.some((d) => b.traits.includes(d)) && !b.dealbreakers.some((d) => a.traits.includes(d));
+}

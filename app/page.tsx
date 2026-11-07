@@ -3,6 +3,7 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function Home() {
   const { status } = useSession();
@@ -25,6 +26,10 @@ export default function Home() {
       >
         Sign in with Google
       </button>
+      <p className="mt-6 max-w-xs text-xs text-gray-500">
+        18+ only. By signing in you agree to our{" "}
+        <Link href="/terms" className="underline">Terms</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
+      </p>
     </main>
   );
 }

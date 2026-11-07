@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calcReplyRate } from "@/lib/matching";
+import { notify } from "@/lib/push";
 
 const MESSAGES_PER_MINUTE = 30;
 
@@ -11,8 +12,8 @@ async function myMatch(matchId: string, meId: string) {
   return prisma.match.findFirst({
     where: { id: matchId, OR: [{ user1Id: meId }, { user2Id: meId }] },
     include: {
-      user1: { select: { id: true, name: true, photos: true, image: true } },
-      user2: { select: { id: true, name: true, photos: true, image: true } },
+      user1: { select: { id: true, name: true, photos: true, image: true, verified: true } },
+      user2: { select: { id: true, name: true, photos: true, image: true, verified: true } },
     },
   });
 }
@@ -66,8 +67,13 @@ export async function POST(req: Request, { params }: Ctx) {
     data: { matchId: match.id, senderId: me.id, body: text },
   });
 
+  const otherId = match.user1Id === me.id ? match.user2Id : match.user1Id;
   // A new message can change both people's reply rate.
-  await Promise.all([updateReplyRate(match.user1Id), updateReplyRate(match.user2Id)]);
+  await Promise.all([
+    updateReplyRate(match.user1Id),
+    updateReplyRate(match.user2Id),
+    notify([otherId], { title: me.name ?? "New message", body: text.slice(0, 120), url: `/chat/${match.id}` }),
+  ]);
 
   return Response.json(message);
 }

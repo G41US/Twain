@@ -14,7 +14,7 @@ export const BUCKET = "media";
  * and a storage rule in Supabase only accepts uploads to paths with a valid ticket.
  * Returns the public URL, or throws.
  */
-export async function uploadFile(kind: "photo" | "voice", file: File): Promise<string> {
+export async function uploadFile(kind: "photo" | "voice" | "selfie", file: File): Promise<string> {
   const res = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

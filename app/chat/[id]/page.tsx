@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Message = { id: string; senderId: string; body: string; createdAt: string };
-type Other = { id: string; name: string | null; photos: string[]; image: string | null };
+type Other = { id: string; name: string | null; photos: string[]; image: string | null; verified: boolean };
 
 // shortcut: polls every 3s; switch to Supabase Realtime or websockets if traffic grows.
 const POLL_MS = 3000;
@@ -101,7 +101,10 @@ export default function Chat() {
       <header className="relative flex items-center gap-3 border-b px-3 py-2">
         <Link href="/matches" aria-label="Back to matches" className="px-2 text-2xl">‹</Link>
         {other && <img src={other.photos[0] || other.image || "https://placehold.co/80?text=?"} alt="" className="h-10 w-10 rounded-full object-cover" />}
-        <h1 className="flex-1 truncate text-lg font-semibold">{other?.name ?? "…"}</h1>
+        <h1 className="flex-1 truncate text-lg font-semibold">
+          {other?.name ?? "…"}
+          {other?.verified && <span className="ml-1 text-sky-500" aria-label="Verified">✓</span>}
+        </h1>
         <button onClick={() => setMenu(!menu)} aria-label="More options" aria-expanded={menu} className="px-3 text-2xl">⋯</button>
         {menu && (
           <div className="absolute right-3 top-12 z-10 w-48 overflow-hidden rounded-xl border bg-white shadow-lg">
@@ -112,7 +115,10 @@ export default function Chat() {
       </header>
 
       <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4">
-        {messages.length === 0 && <p className="mt-10 text-center text-gray-500">You matched! Say hi 👋<br />Stuck? Tap ✨ for an opener.</p>}
+        <p className="mx-auto mb-4 max-w-xs rounded-xl bg-yellow-50 p-3 text-center text-xs text-yellow-900">
+          🛡️ Never send money, airtime or bank details to anyone you meet here. Report anyone who asks.
+        </p>
+        {messages.length === 0 && <p className="mt-6 text-center text-gray-500">You matched! Say hi 👋<br />Stuck? Tap ✨ for an opener.</p>}
         {messages.map((m) => (
           <p
             key={m.id}

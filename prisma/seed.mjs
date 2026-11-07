@@ -29,7 +29,10 @@ for (const p of people) {
   const data = {
     name: p.name, age: p.age, gender: p.gender, lookingFor: p.lookingFor, bio: p.bio,
     vibeAnswers: p.vibe, replyRate: p.replyRate ?? null, isAdmin: p.isAdmin ?? false,
-    photos: [avatar(p.name, p.bg)], dealbreakers: [], preferEthnicity: "all",
+    photos: [avatar(p.name, p.bg)], dealbreakers: [], traits: [], preferEthnicity: "all",
+    // Spread around Lagos so distances differ
+    latitude: 6.45 + people.indexOf(p) * 0.03, longitude: 3.47 + people.indexOf(p) * 0.02,
+    acceptedTermsAt: p.key === "you" ? null : new Date(), verified: ["amara", "zainab"].includes(p.key),
   };
   users[p.key] = await prisma.user.upsert({ where: { email: `${p.key}@demo.twain` }, create: { email: `${p.key}@demo.twain`, ...data }, update: data });
 }

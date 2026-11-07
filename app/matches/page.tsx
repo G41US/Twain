@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type MatchItem = {
   matchId: string;
-  user: { id: string; name: string | null; photos: string[]; image: string | null };
+  user: { id: string; name: string | null; photos: string[]; image: string | null; verified: boolean };
   lastMessage: string | null;
 };
 
@@ -34,7 +34,7 @@ export default function Matches() {
                 className="h-14 w-14 shrink-0 rounded-full object-cover"
               />
               <div className="min-w-0">
-                <p className="font-semibold">{m.user.name}</p>
+                <p className="font-semibold">{m.user.name}{m.user.verified && <span className="ml-1 text-sky-500" aria-label="Verified">✓</span>}</p>
                 <p className="truncate text-sm text-gray-500">{m.lastMessage ?? "Say hi 👋"}</p>
               </div>
             </Link>

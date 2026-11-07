@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Legal pages (no typography plugin installed) */
+.legal h2 { @apply mt-6 mb-2 text-xl font-bold; }
+.legal p, .legal ul { @apply mb-3; }
+.legal ul { @apply list-disc pl-5; }
+.legal li { @apply mb-1; }
+.legal a { @apply text-primary underline; }

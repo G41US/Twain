@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.g41us.twain",
+      "sha256_cert_fingerprints": [
+        "9A:09:1F:1D:B9:C7:7A:4F:05:02:46:4E:06:C9:79:09:76:1F:05:19:5D:B1:1F:A0:37:96:0B:FC:F9:5A:FC:DA"
+      ]
+    }
+  }
+]

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/push";
 
 const LIKES_PER_HOUR = 100;
 
@@ -33,10 +34,12 @@ export async function POST(req: Request) {
 
   // Sorted ids so A+B and B+A are the same match row.
   const [user1Id, user2Id] = [me, targetId].sort();
-  const match = await prisma.match.upsert({
-    where: { user1Id_user2Id: { user1Id, user2Id } },
-    create: { user1Id, user2Id },
-    update: {},
-  });
+  // create fails on the unique pair if the match already exists (or both swiped at the same moment).
+  const created = await prisma.match.create({ data: { user1Id, user2Id } }).catch(() => null);
+  const match = created ?? (await prisma.match.findUniqueOrThrow({ where: { user1Id_user2Id: { user1Id, user2Id } } }));
+  // The other person liked first, so they don't know yet — tell them.
+  if (created) {
+    await notify([targetId], { title: "It's a match! 🎉", body: `You and ${user.name ?? "someone"} like each other.`, url: `/chat/${match.id}` });
+  }
   return Response.json({ matchId: match.id });
 }

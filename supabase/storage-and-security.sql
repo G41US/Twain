@@ -11,7 +11,12 @@ ALTER TABLE "Message" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Block" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Report" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "UploadTicket" ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE "Account", "User", "Like", "Match", "Message", "Block", "Report", "UploadTicket" FROM anon, authenticated;
+ALTER TABLE "Pass" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "PushSubscription" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "MediaDeletion" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ErrorLog" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE "Account", "User", "Like", "Match", "Message", "Block", "Report", "UploadTicket",
+  "Pass", "PushSubscription", "MediaDeletion", "ErrorLog" FROM anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated;
 

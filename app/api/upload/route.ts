@@ -5,7 +5,8 @@ import { BUCKET, SUPABASE_URL } from "@/lib/supabase";
 
 const TICKET_MINUTES = 10;
 const TICKETS_PER_HOUR = 40;
-const allowed: Record<string, RegExp> = { photo: /^image\/(jpeg|png|webp|gif|heic|heif)$/, voice: /^audio\/(webm|ogg|mp4|mpeg|aac|wav|x-m4a)$/ };
+const image = /^image\/(jpeg|png|webp|gif|heic|heif)$/;
+const allowed: Record<string, RegExp> = { photo: image, selfie: image, voice: /^audio\/(webm|ogg|mp4|mpeg|aac|wav|x-m4a)$/ };
 
 export async function POST(req: Request) {
   const me = await getCurrentUser();

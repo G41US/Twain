@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const person = { select: { id: true, name: true, bio: true, photos: true, image: true } };
+const person = { select: { id: true, name: true, bio: true, photos: true, image: true, verified: true } };
 
 export async function GET() {
   const me = await getCurrentUser();

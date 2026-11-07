@@ -13,7 +13,8 @@ type Profile = {
   voiceIntroUrl?: string | null;
   replyRate: number | null;
   vibe: number | null;
-  dealbreakers?: string[];
+  verified: boolean;
+  distanceKm: number;
 };
 
 const SWIPE_DISTANCE = 100; // px of drag that counts as a swipe
@@ -45,11 +46,16 @@ export default function Swipe() {
     setCurrent((c) => c + 1);
   };
 
-  // shortcut: passes aren't stored, so passed profiles return next visit; add a Pass model if that matters.
   const swipe = async (direction: "left" | "right") => {
     if (!profile) return;
     setDx(direction === "right" ? 600 : -600); // fly off screen
-    if (direction === "right") {
+    if (direction === "left") {
+      fetch("/api/swipe/left", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetId: profile.id }),
+      });
+    } else {
       const res = await fetch("/api/swipe/right", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,12 +95,19 @@ export default function Swipe() {
   if (needsProfile)
     return (
       <Centered>
-        <p className="mb-4">Tell us who you are and who you&apos;re looking for first.</p>
-        <Link href="/profile" className="rounded-full bg-primary px-6 py-3 font-semibold text-white">Complete profile</Link>
+        <p className="mb-4">Finish setting up your profile to start meeting people.</p>
+        <Link href="/profile" className="rounded-full bg-primary px-6 py-3 font-semibold text-white">Finish profile</Link>
       </Centered>
     );
   if (!profiles) return <Centered>Finding people…</Centered>;
-  if (!profile) return <Centered>No more profiles right now 😢<br />Check back later.</Centered>;
+  if (!profile)
+    return (
+      <Centered>
+        No one new nearby right now 😢
+        <span className="mt-2 text-base text-gray-500">Try a bigger distance or age range in your profile, or check back later.</span>
+        <Link href="/profile" className="mt-6 rounded-full border px-6 py-3 text-base font-semibold">Change preferences</Link>
+      </Centered>
+    );
 
   const photo = profile.photos?.[0] || profile.image || "https://placehold.co/384x600?text=No+Photo";
   const rotate = dx / 20;
@@ -136,7 +149,11 @@ export default function Swipe() {
         </button>
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-5 pt-16 text-white">
-          <h2 className="text-3xl font-bold">{profile.name}, {profile.age ?? "?"}</h2>
+          <h2 className="text-3xl font-bold">
+            {profile.name}, {profile.age ?? "?"}
+            {profile.verified && <span className="ml-2 align-middle text-xl text-sky-400" aria-label="Verified" title="Verified">✓</span>}
+          </h2>
+          <p className="text-sm text-gray-200">📍 {profile.distanceKm} km away</p>
           <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
             {profile.vibe !== null && <span className="rounded-full bg-purple-600 px-3 py-1">✨ {profile.vibe}% vibe match</span>}
             <span className="rounded-full bg-green-600 px-3 py-1">

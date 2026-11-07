@@ -16,9 +16,11 @@ A modern, full-stack dating app built with Next.js 15, Prisma, and Vercel. Featu
    - `DATABASE_URL` — Supabase Postgres (free). On Vercel use the **Transaction pooler**
      string from Supabase → Connect, with `?pgbouncer=true` added to the end.
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+   - `VAPID_PRIVATE_KEY` — turns on push notifications (public half is in `lib/push-key.ts`)
    - `WINGMAN_API_KEY` — optional, turns on the ✨ AI wingman
 4. Create tables: `npm run db:push`. On a **new** Supabase project, then run
-   `supabase/storage-and-security.sql` in the SQL Editor (photo/voice storage + locks the public API).
+   `supabase/storage-and-security.sql` in the SQL Editor (photo/voice storage + locks the public API),
+   deploy `supabase/functions/purge-media` and run `supabase/scheduled-jobs.sql` (erases deleted users' media).
 5. Run: `npm run dev`
 
 ### Try it without Google
@@ -40,3 +42,11 @@ UPDATE "User" SET "isAdmin" = true WHERE email = 'you@example.com';
 Then open `/admin`.
 
 Built with ❤️ by [Gaius] — the future of dating.
+
+## Android app
+`android/` is a Trusted Web Activity: a real Play Store app that opens the live site full-screen, with its own
+icon, splash screen and notifications. GitHub Actions builds it (`.github/workflows/android.yml`).
+Publishing steps, store listing text and data-safety answers: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
+
+## Contact email and operator name
+Shown on the privacy policy and terms: edit `lib/site.ts` (or set `NEXT_PUBLIC_SUPPORT_EMAIL` / `NEXT_PUBLIC_OPERATOR`).
