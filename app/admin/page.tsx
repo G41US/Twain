@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import BanButton from "./BanButton";
 import VerifyButtons from "./VerifyButtons";
 
@@ -7,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function Admin() {
   const me = await getCurrentUser();
-  if (!me?.isAdmin) return <div className="p-8">Access denied.</div>;
+  if (!me) redirect("/api/auth/signin/google?callbackUrl=/admin");
+  if (!me.isAdmin) return <div className="p-8">Access denied.</div>;
 
   const dayAgo = new Date(Date.now() - 24 * 3600_000);
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600_000);
