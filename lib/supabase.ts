@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 // Public by design (the anon key only has the rights our database rules give it), so it's fine in code.
 // Override with env vars if you move to another Supabase project.
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wnhrkkgsedcaidvwzwfq.supabase.co";
-const SUPABASE_ANON_KEY =
+export const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InduaHJra2dzZWRjYWlkdnd6d2ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMTY0MDMsImV4cCI6MjA3OTU5MjQwM30.dL7Epg9HEkNQq3cOkmc9Z8te6CvNPQ_8M46-HS2ENQs";
 

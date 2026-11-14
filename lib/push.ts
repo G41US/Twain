@@ -7,10 +7,28 @@ if (privateKey) webpush.setVapidDetails("https://twain-coral.vercel.app", VAPID_
 
 type Notice = { title: string; body: string; url: string };
 
+const isExpo = (endpoint: string) => endpoint.startsWith("Expo");
+
+/** Native app devices: Expo's push service (no key needed server-side). */
+async function sendExpo(tokens: string[], notice: Notice) {
+  if (tokens.length === 0) return;
+  const res = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(tokens.map((to) => ({ to, title: notice.title, body: notice.body, data: { url: notice.url }, sound: "default", channelId: "default" }))),
+  }).catch(() => null);
+  const tickets: { status: string; details?: { error?: string } }[] = (await res?.json().catch(() => null))?.data ?? [];
+  // Uninstalled app / revoked permission: forget that device.
+  const dead = tokens.filter((_, i) => tickets[i]?.details?.error === "DeviceNotRegistered");
+  if (dead.length) await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: dead } } });
+}
+
 /** Send a push to every device of these users. Never throws: a failed notification must not break the request. */
 export async function notify(userIds: string[], notice: Notice) {
-  if (!privateKey || userIds.length === 0) return;
-  const subs = await prisma.pushSubscription.findMany({ where: { userId: { in: userIds } } });
+  if (userIds.length === 0) return;
+  const all = await prisma.pushSubscription.findMany({ where: { userId: { in: userIds } } });
+  await sendExpo(all.filter((s) => isExpo(s.endpoint)).map((s) => s.endpoint), notice).catch(() => {});
+  const subs = privateKey ? all.filter((s) => !isExpo(s.endpoint)) : [];
   await Promise.all(
     subs.map((s) =>
       webpush

@@ -1,13 +1,14 @@
-# Builds the Twain Android app (APK to install, AAB for Play Store) on every change to android/,
-# or by hand from the Actions tab. Signing needs four repo secrets (Settings → Secrets → Actions):
+# Builds the native Twain Android app (mobile/) — APK to install, AAB for the Play Store —
+# on every change to mobile/, or by hand from the Actions tab. Signing needs four repo secrets
+# (Settings → Secrets and variables → Actions):
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
-# Without them it still builds, but the release is unsigned and can't be installed or uploaded.
+# Without them it still builds, but signed with a throwaway debug key (fine to try, not for Play).
 name: Android app
 
 on:
   push:
     branches: [main]
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths: ["mobile/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 permissions:
@@ -18,9 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: android
+        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
 
       - uses: actions/setup-java@v4
         with:
@@ -28,6 +35,14 @@ jobs:
           java-version: "17"
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+      - run: npx tsc --noEmit && npx expo lint
+
+      - name: Generate the Android project
+        run: npx expo prebuild -p android --no-install
+        env:
+          CI: 1
 
       - name: Decode signing key
         env:
@@ -37,32 +52,30 @@ jobs:
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
           else
-            echo "::warning::No signing secrets set — building an unsigned release."
+            echo "::warning::No signing secrets set — release is signed with the debug key."
           fi
 
       - name: Build APK and AAB
+        working-directory: mobile/android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # Play needs every upload to have a higher version code; start above the first manual build (1).
-          VERSION_CODE: ${{ github.run_number + 1 }}
-          VERSION_NAME: 1.0.${{ github.run_number }}
-        run: ./gradlew assembleRelease bundleRelease
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Publish release (download the APK on your phone from the Releases page)
         if: env.ANDROID_KEYSTORE_PATH != ''
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-v1.0.${{ github.run_number }}
-          name: Twain Android 1.0.${{ github.run_number }}
+          tag_name: app-v1.0.${{ github.run_number }}
+          name: Twain 1.0.${{ github.run_number }}
           files: |
-            android/app/build/outputs/apk/release/app-release.apk
-            android/app/build/outputs/bundle/release/app-release.aab
+            mobile/android/app/build/outputs/apk/release/app-release.apk
+            mobile/android/app/build/outputs/bundle/release/app-release.aab
 
       - uses: actions/upload-artifact@v4
         with:
           name: twain-android
           path: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/*.aab
+            mobile/android/app/build/outputs/apk/release/*.apk
+            mobile/android/app/build/outputs/bundle/release/*.aab

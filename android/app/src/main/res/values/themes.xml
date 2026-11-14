@@ -1,6 +1,0 @@
-<resources>
-    <style name="Theme.Twain" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/brand</item>
-        <item name="android:windowBackground">@color/background</item>
-    </style>
-</resources>
