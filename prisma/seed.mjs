@@ -5,7 +5,12 @@ import { PrismaClient } from "@prisma/client";
 if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed demo users in production");
 
 const prisma = new PrismaClient();
-const avatar = (seed, bg) => `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&backgroundColor=${bg}`;
+// iOS Contacts-style placeholder: white initials on a grey gradient (no cartoon avatars).
+const avatar = (name) =>
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A5ABB8"/><stop offset="1" stop-color="#858994"/></linearGradient></defs><rect width="300" height="400" fill="url(#g)"/><text x="150" y="230" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="120" font-weight="600" fill="#fff" text-anchor="middle">${name.slice(0, 1).toUpperCase()}</text></svg>`,
+  );
 const vibes = (...yes) =>
   Object.fromEntries(
     ["Pineapple on pizza is elite", "Cats > Dogs", "I believe in astrology", "I want kids someday", "I'm sober", "I reply to messages fast"]
@@ -13,15 +18,15 @@ const vibes = (...yes) =>
   );
 
 const people = [
-  { key: "you", name: "Alex", age: 27, gender: "Male", lookingFor: "Women", bio: "Software dev. Jollof critic. Will beat you at FIFA.", vibe: vibes(0, 3, 5), isAdmin: true, bg: "c0aede" },
-  { key: "amara", name: "Amara", age: 25, gender: "Female", lookingFor: "Men", bio: "Architect by day, amateur baker by night. Tell me your favourite pastry.", vibe: vibes(0, 3, 5), replyRate: 92, bg: "ffd5dc" },
-  { key: "zainab", name: "Zainab", age: 26, gender: "Female", lookingFor: "Everyone", bio: "Afrobeats on repeat. Looking for someone to explore Lagos food spots with.", vibe: vibes(0, 1, 3, 5), replyRate: 88, bg: "ffdfbf" },
-  { key: "tolu", name: "Tolu", age: 24, gender: "Female", lookingFor: "Men", bio: "Med student. Sleep is a myth. Make me laugh and you win.", vibe: vibes(2, 3), replyRate: 61, bg: "d1d4f9" },
-  { key: "chioma", name: "Chioma", age: 28, gender: "Female", lookingFor: "Men", bio: "Product designer. Plants, podcasts and long walks at Lekki Conservation Centre.", vibe: vibes(1, 3, 4, 5), replyRate: null, bg: "b6e3f4" },
-  { key: "ife", name: "Ife", age: 23, gender: "Female", lookingFor: "Everyone", bio: "Photographer 📸 Let me take your picture — then buy me suya.", vibe: vibes(0, 2, 5), replyRate: 75, bg: "ffd5dc" },
+  { key: "you", name: "Alex", age: 27, gender: "Male", lookingFor: "Women", bio: "Software dev. Jollof critic. Will beat you at FIFA.", vibe: vibes(0, 3, 5), isAdmin: true },
+  { key: "amara", name: "Amara", age: 25, gender: "Female", lookingFor: "Men", bio: "Architect by day, amateur baker by night. Tell me your favourite pastry.", vibe: vibes(0, 3, 5), replyRate: 92 },
+  { key: "zainab", name: "Zainab", age: 26, gender: "Female", lookingFor: "Everyone", bio: "Afrobeats on repeat. Looking for someone to explore Lagos food spots with.", vibe: vibes(0, 1, 3, 5), replyRate: 88 },
+  { key: "tolu", name: "Tolu", age: 24, gender: "Female", lookingFor: "Men", bio: "Med student. Sleep is a myth. Make me laugh and you win.", vibe: vibes(2, 3), replyRate: 61 },
+  { key: "chioma", name: "Chioma", age: 28, gender: "Female", lookingFor: "Men", bio: "Product designer. Plants, podcasts and long walks at Lekki Conservation Centre.", vibe: vibes(1, 3, 4, 5), replyRate: null },
+  { key: "ife", name: "Ife", age: 23, gender: "Female", lookingFor: "Everyone", bio: "Photographer 📸 Let me take your picture — then buy me suya.", vibe: vibes(0, 2, 5), replyRate: 75 },
   // Shouldn't appear for Alex (gender filter): a man, and a woman looking for women.
-  { key: "daniel", name: "Daniel", age: 29, gender: "Male", lookingFor: "Women", bio: "Gym, football, shawarma.", vibe: vibes(5), replyRate: 40, bg: "c0aede" },
-  { key: "nneka", name: "Nneka", age: 27, gender: "Female", lookingFor: "Women", bio: "Bookworm and coffee snob.", vibe: vibes(1), replyRate: 80, bg: "ffdfbf" },
+  { key: "daniel", name: "Daniel", age: 29, gender: "Male", lookingFor: "Women", bio: "Gym, football, shawarma.", vibe: vibes(5), replyRate: 40 },
+  { key: "nneka", name: "Nneka", age: 27, gender: "Female", lookingFor: "Women", bio: "Bookworm and coffee snob.", vibe: vibes(1), replyRate: 80 },
 ];
 
 const users = {};
@@ -29,7 +34,7 @@ for (const p of people) {
   const data = {
     name: p.name, age: p.age, gender: p.gender, lookingFor: p.lookingFor, bio: p.bio,
     vibeAnswers: p.vibe, replyRate: p.replyRate ?? null, isAdmin: p.isAdmin ?? false,
-    photos: [avatar(p.name, p.bg)], dealbreakers: [], traits: [], preferEthnicity: "all",
+    photos: [avatar(p.name)], dealbreakers: [], traits: [], preferEthnicity: "all",
     // Spread around Lagos so distances differ
     latitude: 6.45 + people.indexOf(p) * 0.03, longitude: 3.47 + people.indexOf(p) * 0.02,
     acceptedTermsAt: p.key === "you" ? null : new Date(), verified: ["amara", "zainab"].includes(p.key),
