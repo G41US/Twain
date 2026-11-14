@@ -17,11 +17,11 @@ export default function VerifyButtons({ userId }: { userId: string }) {
     else alert("Failed: " + (await res.text()));
   };
 
-  if (done) return <p className="text-sm font-semibold">{done === "approved" ? "✓ Approved" : "✕ Rejected"}</p>;
+  if (done) return <p className={`text-sm font-semibold ${done === "approved" ? "text-[#067647]" : "text-[#6B6170]"}`}>{done === "approved" ? "Approved" : "Rejected"}</p>;
   return (
     <div className="flex gap-2">
-      <button onClick={() => decide(true)} disabled={busy} className="flex-1 rounded-lg bg-green-600 py-2 font-semibold text-white disabled:opacity-50">Approve</button>
-      <button onClick={() => decide(false)} disabled={busy} className="flex-1 rounded-lg bg-gray-500 py-2 font-semibold text-white disabled:opacity-50">Reject</button>
+      <button onClick={() => decide(true)} disabled={busy} className="flex-1 rounded-lg bg-[#140A18] py-2.5 text-sm font-semibold text-white transition hover:bg-[#2A1830] disabled:opacity-50">Approve</button>
+      <button onClick={() => decide(false)} disabled={busy} className="flex-1 rounded-lg border border-[#E4DCE8] bg-white py-2.5 text-sm font-semibold text-[#6B6170] transition hover:bg-[#F7F3F9] disabled:opacity-50">Reject</button>
     </div>
   );
 }

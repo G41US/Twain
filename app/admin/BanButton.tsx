@@ -22,7 +22,7 @@ export default function BanButton({ userId, banned: initial }: { userId: string;
     <button
       onClick={toggle}
       disabled={busy}
-      className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-white disabled:opacity-50 ${banned ? "bg-gray-500" : "bg-red-600"}`}
+      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${banned ? "border-[#E4DCE8] bg-white text-[#6B6170] hover:bg-[#F7F3F9]" : "border-[#F5C2C0] bg-white text-[#B42318] hover:bg-[#FDECEC]"}`}
     >
       {banned ? "Unban" : "Ban"}
     </button>

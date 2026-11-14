@@ -12,8 +12,8 @@ const tabs = [
 export default function BottomNav() {
   const { status } = useSession();
   const path = usePathname();
-  // Chat has its own header and input bar.
-  if (status !== "authenticated" || path.startsWith("/chat")) return null;
+  // Chat has its own header and input bar; admin is a separate console.
+  if (status !== "authenticated" || path.startsWith("/chat") || path.startsWith("/admin")) return null;
 
   return (
     <>
