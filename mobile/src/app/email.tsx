@@ -68,7 +68,7 @@ export default function EmailSignIn() {
             hitSlop={12}
             style={styles.back}
           >
-            <Ionicons name="chevron-back" size={26} color={colors.ink} />
+            <Ionicons name="chevron-back" size={30} color={colors.brand} />
           </Pressable>
 
           {step === "email" ? (
@@ -94,7 +94,7 @@ export default function EmailSignIn() {
           ) : (
             <View style={styles.body}>
               <T variant="title">Enter your code</T>
-              <T variant="small">We sent it to {email}. It can take a minute — check spam too.</T>
+              <T variant="small">We sent it to {email}. It can take a minute, so check spam too.</T>
               <TextInput
                 ref={codeInput}
                 value={code}
@@ -109,7 +109,7 @@ export default function EmailSignIn() {
                 textContentType="oneTimeCode"
                 maxLength={10}
                 placeholder="••••••"
-                placeholderTextColor="#C9C0CE"
+                placeholderTextColor={colors.faint}
                 accessibilityLabel="6-digit code"
                 style={styles.code}
               />
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   back: { width: 44, height: 44, justifyContent: "center", marginLeft: -8 },
   body: { gap: 16, marginTop: 12 },
   code: {
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.line, borderRadius: 18,
+    backgroundColor: colors.white, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline, borderRadius: 12,
     paddingVertical: 16, textAlign: "center", fontFamily: font.bold, fontSize: 32, letterSpacing: 12, color: colors.ink,
   },
 });

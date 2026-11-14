@@ -12,7 +12,7 @@ import type { Me } from "../ctx/profile";
 import { api, mimeFor, uploadFile } from "../lib/api";
 import { API_URL } from "../lib/config";
 import { CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, LOOKING_FOR, slug, TRAITS, VIBE_QUESTIONS } from "../lib/options";
-import { colors, font } from "../lib/theme";
+import { colors, font, tile } from "../lib/theme";
 import { Card, Check, Choice, Field, T, IconLine, Notice } from "./ui";
 
 export const MAX_PHOTOS = 6;
@@ -84,10 +84,10 @@ export function WelcomeSection({ form, set }: SectionProps) {
   return (
     <View style={{ gap: 16 }}>
       <T>Let&apos;s set up your profile. It takes about 2 minutes.</T>
-      <Card tint="#FFF0F5">
-        <IconLine icon="checkmark-circle" color="#16A34A">Be yourself: real photos, real age.</IconLine>
-        <IconLine icon="hand-left" color="#DC2626">Never send money to anyone you meet here.</IconLine>
-        <IconLine icon="flag" color={colors.violet}>Report anyone who makes you uncomfortable.</IconLine>
+      <Card style={{ gap: 14 }}>
+        <IconLine icon="person-circle" color={tile.blue}>Be yourself: real photos, real age.</IconLine>
+        <IconLine icon="hand-left" color={tile.red}>Never send money to anyone you meet here.</IconLine>
+        <IconLine icon="flag" color={tile.orange}>Report anyone who makes you uncomfortable.</IconLine>
       </Card>
       <Check checked={form.acceptTerms} onChange={(v) => set({ acceptTerms: v })} label="I'm 18 or older and I agree to the Terms and Privacy Policy." />
       <View style={{ flexDirection: "row", gap: 20 }}>
@@ -173,11 +173,11 @@ export function WhereSection({ form, set, setError }: SectionProps) {
   };
   return (
     <View style={{ gap: 18 }}>
-      <Card tint="#EEF2FF">
-        <T variant="small" style={{ color: "#1E3A8A" }}>We only store your location to about 1 km, and only show others how far away you are.</T>
-        <PillButton icon="navigate" label={locating ? "Finding you…" : "Use my location"} onPress={useGps} disabled={locating} />
-        <Text style={[styles.link, { color: "#1E3A8A" }]} onPress={() => setShowCities(!showCities)}>
-          {showCities ? "Hide cities" : "…or pick your city"}
+      <Card>
+        <T variant="small">We only store your location to about 1 km, and only show others how far away you are.</T>
+        <PillButton icon="navigate" color={tile.blue} label={locating ? "Finding you…" : "Use my location"} onPress={useGps} disabled={locating} />
+        <Text style={styles.link} onPress={() => setShowCities(!showCities)}>
+          {showCities ? "Hide cities" : "Or pick your city"}
         </Text>
         {showCities ? (
           <Choice
@@ -243,20 +243,20 @@ export function VoiceSection({ form, set, setError }: SectionProps) {
 
   const secs = Math.floor((rec.durationMillis ?? 0) / 1000);
   return (
-    <Card tint="#FFF1F2">
-      <T variant="small" style={{ color: "#9F1239" }}>
+    <Card>
+      <T variant="small">
         Profiles with a voice intro get more replies. Say hi and one fun thing about you (up to 30 seconds).
       </T>
       {form.voiceIntroUrl && !rec.isRecording ? <VoicePlayer url={form.voiceIntroUrl} /> : null}
       {rec.isRecording ? (
-        <PillButton icon="stop" label={`Stop recording · 0:${String(secs).padStart(2, "0")}`} onPress={stop} color="#E11D48" />
+        <PillButton icon="stop" label={`Stop recording · 0:${String(secs).padStart(2, "0")}`} onPress={stop} color={colors.danger} />
       ) : (
         <PillButton
           icon="mic"
           label={uploading ? "Uploading…" : form.voiceIntroUrl ? "Re-record" : "Record voice intro"}
           onPress={start}
           disabled={uploading}
-          color="#E11D48"
+          color={colors.brand}
         />
       )}
     </Card>
@@ -287,18 +287,19 @@ export function VibesSection({ form, set }: SectionProps) {
     set({ [list]: form[list].includes(v) ? form[list].filter((x) => x !== v) : [...form[list], v] });
   return (
     <View style={{ gap: 14 }}>
-      <Card tint="#F5F0FF">
-        <T variant="small" style={{ color: "#4C1D95" }}>Tick what&apos;s true for you. We show people how much you vibe.</T>
+      <Card>
+        <T variant="small">Tick what&apos;s true for you. We show people how much you vibe.</T>
         {VIBE_QUESTIONS.map((q) => (
           <Check key={q} label={q} checked={!!form.vibeAnswers[q]} onChange={(v) => set({ vibeAnswers: { ...form.vibeAnswers, [q]: v } })} />
         ))}
       </Card>
-      <Card tint="#EEFBF3">
-        <T variant="label" style={{ color: "#14532D" }}>About me (private, used for matching)</T>
+      <Card>
+        <T variant="label">About me</T>
+        <T variant="small">Private. Only used for matching.</T>
         {TRAITS.map((t) => <Check key={t.value} label={t.label} checked={form.traits.includes(t.value)} onChange={() => toggle("traits", t.value)} />)}
       </Card>
-      <Card tint="#FFF6EC">
-        <T variant="label" style={{ color: "#7C2D12" }}>Dealbreakers: don&apos;t show me people who…</T>
+      <Card>
+        <T variant="label">Don&apos;t show me people who…</T>
         {DEALBREAKERS.map((d) => <Check key={d.value} label={d.label} checked={form.dealbreakers.includes(d.value)} onChange={() => toggle("dealbreakers", d.value)} />)}
       </Card>
     </View>
@@ -330,24 +331,24 @@ export function PillButton({ icon, label, onPress, disabled, color = colors.ink 
 }) {
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button"
-      style={({ pressed }) => [styles.pill, { backgroundColor: color, opacity: disabled ? 0.6 : pressed ? 0.85 : 1 }]}>
-      <Ionicons name={icon} size={18} color={colors.white} />
+      style={({ pressed }) => [styles.pill, { opacity: disabled ? 0.5 : pressed ? 0.7 : 1 }]}>
+      <Ionicons name={icon} size={19} color={color} />
       <Text style={styles.pillText}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  link: { color: colors.brand, fontFamily: font.semibold, fontSize: 14, textDecorationLine: "underline" },
+  link: { color: colors.brand, fontFamily: font.medium, fontSize: 15 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  tile: { width: "31%", aspectRatio: 3 / 4, borderRadius: 16, overflow: "hidden", backgroundColor: "#EEE8F1" },
-  addTile: { borderWidth: 2, borderStyle: "dashed", borderColor: "#F3B6C9", backgroundColor: "#FFF5F8", alignItems: "center", justifyContent: "center", gap: 4 },
-  addText: { fontFamily: font.semibold, fontSize: 12, color: colors.brand },
+  tile: { width: "31%", aspectRatio: 3 / 4, borderRadius: 12, overflow: "hidden", backgroundColor: colors.line },
+  addTile: { backgroundColor: colors.card, alignItems: "center", justifyContent: "center", gap: 4 },
+  addText: { fontFamily: font.medium, fontSize: 12.5, color: colors.brand },
   remove: { position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: 13, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" },
   mainTag: { position: "absolute", left: 6, bottom: 6, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
   mainTagText: { color: colors.white, fontFamily: font.semibold, fontSize: 11 },
-  pill: { height: 48, borderRadius: 24, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 18 },
-  pillText: { color: colors.white, fontFamily: font.bold, fontSize: 15 },
-  voice: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", backgroundColor: colors.white, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  pill: { height: 46, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 16, backgroundColor: colors.fill },
+  pillText: { color: colors.ink, fontFamily: font.semibold, fontSize: 15.5 },
+  voice: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", backgroundColor: colors.fill, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9 },
   voiceText: { fontFamily: font.semibold, fontSize: 14, color: colors.ink },
 });

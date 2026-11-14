@@ -1,21 +1,31 @@
 import { useEffect, useState } from "react";
 import { enablePush, pushPermission, type PushState } from "../lib/push";
-import { PillButton } from "./profile-form";
-import { Card, Notice, T } from "./ui";
+import { tile } from "../lib/theme";
+import { Group, Row } from "./ui";
 
+const FOOTER: Record<PushState | "", string> = {
+  granted: "We'll tell you about new matches and messages.",
+  denied: "Notifications are blocked. Turn them on in your phone's Settings → Apps → Twain.",
+  unavailable: "Notifications aren't available on this device yet.",
+  undetermined: "Get told the moment you match or someone messages you.",
+  "": "",
+};
+
+/** Settings-style notifications row: shows the state, tap to turn on. */
 export function NotificationsCard() {
   const [state, setState] = useState<PushState | "">("");
   useEffect(() => {
     pushPermission().then((s) => (s === "granted" ? enablePush().then(setState) : setState(s))); // re-register quietly
   }, []);
 
-  if (state === "granted") return <Notice tone="success" icon="notifications" text="Notifications are on. We'll tell you about new matches and messages." />;
-  if (state === "denied") return <Card tint="#FEF9C3"><T style={{ color: "#713F12" }}>Notifications are blocked. Turn them on in your phone&apos;s Settings → Apps → Twain.</T></Card>;
-  if (state === "unavailable") return <Card tint="#F4F4F5"><T variant="small">Notifications aren&apos;t available on this device yet.</T></Card>;
+  const canAsk = state === "undetermined";
   return (
-    <Card tint="#FEF9C3">
-      <T style={{ color: "#713F12" }}>Get told the moment you match or someone messages you.</T>
-      <PillButton icon="notifications" label="Turn on notifications" onPress={async () => setState(await enablePush())} color="#CA8A04" />
-    </Card>
+    <Group footer={FOOTER[state] || undefined}>
+      <Row
+        icon="notifications" tint={tile.red} title="Notifications" last
+        value={state === "granted" ? "On" : state === "undetermined" ? "Turn on" : state ? "Off" : ""}
+        onPress={canAsk ? async () => setState(await enablePush()) : undefined}
+      />
+    </Group>
   );
 }

@@ -5,7 +5,7 @@ import { Linking, Modal, Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { API_URL } from "../lib/config";
 import { colors } from "../lib/theme";
-import { Button, T } from "./ui";
+import { Button, Grabber, T } from "./ui";
 
 type Latest = { versionCode: number; version: string; notes?: string; url: string; minVersionCode?: number };
 
@@ -35,6 +35,7 @@ export function UpdatePrompt() {
     <Modal visible={!dismissed || required} transparent animationType="slide" onRequestClose={() => { if (!required) setDismissed(true); }}>
       <View style={styles.backdrop} />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+        <Grabber />
         <View style={styles.icon}>
           <Ionicons name="arrow-down-circle" size={34} color={colors.brand} />
         </View>
@@ -57,6 +58,6 @@ export function UpdatePrompt() {
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
-  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, gap: 12 },
-  icon: { alignSelf: "center", width: 64, height: 64, borderRadius: 32, backgroundColor: "#FFE4EC", alignItems: "center", justifyContent: "center" },
+  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 14, borderTopRightRadius: 14, paddingHorizontal: 20, paddingTop: 8, gap: 12 },
+  icon: { alignSelf: "center", width: 64, height: 64, borderRadius: 32, backgroundColor: colors.brandTint, alignItems: "center", justifyContent: "center" },
 });

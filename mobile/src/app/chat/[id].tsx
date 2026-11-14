@@ -90,7 +90,7 @@ export default function Chat() {
       <Screen>
         <View style={styles.center}>
           <T variant="h2">This chat is no longer available</T>
-          <Button title="Back to matches" variant="outline" onPress={() => router.back()} style={{ alignSelf: "stretch" }} />
+          <Button title="Back to matches" variant="secondary" onPress={() => router.back()} style={{ alignSelf: "stretch" }} />
         </View>
       </Screen>
     );
@@ -99,16 +99,18 @@ export default function Chat() {
   return (
     <Screen edges={["top"]} style={{ backgroundColor: colors.white }}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
-          <Ionicons name="chevron-back" size={28} color={colors.ink} />
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10} style={styles.navSide}>
+          <Ionicons name="chevron-back" size={30} color={colors.brand} />
         </Pressable>
-        <Avatar uri={other?.photos[0] || other?.image} name={other?.name} size={40} />
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Text style={styles.name} numberOfLines={1}>{other?.name ?? "…"}</Text>
-          {other?.verified ? <Ionicons name="checkmark-circle" size={18} color={colors.verified} accessibilityLabel="Verified" /> : null}
+        <View style={styles.who}>
+          <Avatar uri={other?.photos[0] || other?.image} name={other?.name} size={38} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Text style={styles.name} numberOfLines={1}>{other?.name ?? " "}</Text>
+            {other?.verified ? <Ionicons name="checkmark-circle" size={13} color={colors.verified} accessibilityLabel="Verified" /> : null}
+          </View>
         </View>
-        <Pressable onPress={() => setMenu(true)} accessibilityRole="button" accessibilityLabel="More options" hitSlop={10}>
-          <Ionicons name="ellipsis-horizontal" size={26} color={colors.ink} />
+        <Pressable onPress={() => setMenu(true)} accessibilityRole="button" accessibilityLabel="More options" hitSlop={10} style={[styles.navSide, { alignItems: "flex-end" }]}>
+          <Ionicons name="ellipsis-horizontal-circle-outline" size={28} color={colors.brand} />
         </Pressable>
       </View>
 
@@ -120,7 +122,7 @@ export default function Chat() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.safety}>
-            <Ionicons name="shield-checkmark" size={16} color="#713F12" />
+            <Ionicons name="shield-checkmark" size={13} color={colors.muted} />
             <Text style={styles.safetyText}>Never send money, airtime or bank details to anyone you meet here. Report anyone who asks.</Text>
           </View>
           {messages === null ? <ActivityIndicator color={colors.brand} /> : null}
@@ -139,21 +141,21 @@ export default function Chat() {
 
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
           <Pressable onPress={wingman} disabled={thinking} accessibilityRole="button" accessibilityLabel="AI wingman suggestion" style={styles.wingman}>
-            {thinking ? <ActivityIndicator color={colors.violet} /> : <Ionicons name="sparkles" size={20} color={colors.violet} />}
+            {thinking ? <ActivityIndicator color={colors.violet} /> : <Ionicons name="sparkles" size={21} color={colors.violet} />}
           </Pressable>
           <TextInput
             value={input}
             onChangeText={setInput}
             placeholder="Message…"
-            placeholderTextColor="#A39AA8"
+            placeholderTextColor={colors.faint}
             maxLength={1000}
             multiline
             accessibilityLabel="Message"
             style={styles.input}
           />
           <Pressable onPress={send} disabled={sending || !input.trim()} accessibilityRole="button" accessibilityLabel="Send"
-            style={[styles.send, (sending || !input.trim()) && { opacity: 0.4 }]}>
-            {sending ? <ActivityIndicator color={colors.white} /> : <Ionicons name="send" size={18} color={colors.white} />}
+            style={[styles.send, (sending || !input.trim()) && { backgroundColor: colors.faint }]}>
+            {sending ? <ActivityIndicator color={colors.white} /> : <Ionicons name="arrow-up" size={20} color={colors.white} />}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -161,11 +163,12 @@ export default function Chat() {
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)}>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenu(false)}>
           <View style={[styles.menu, { top: insets.top + 56 }]}>
-            <Pressable onPress={() => { setMenu(false); setReporting(true); }} style={styles.menuItem} accessibilityRole="button">
-              <Ionicons name="flag-outline" size={20} color={colors.ink} /><Text style={styles.menuText}>Report</Text>
+            <Pressable onPress={() => { setMenu(false); setReporting(true); }} accessibilityRole="button"
+              style={({ pressed }) => [styles.menuItem, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline }, pressed && { backgroundColor: colors.bg }]}>
+              <Text style={styles.menuText}>Report</Text><Ionicons name="flag-outline" size={19} color={colors.ink} />
             </Pressable>
-            <Pressable onPress={block} style={styles.menuItem} accessibilityRole="button">
-              <Ionicons name="ban" size={20} color={colors.danger} /><Text style={[styles.menuText, { color: colors.danger }]}>Block & unmatch</Text>
+            <Pressable onPress={block} accessibilityRole="button" style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: colors.bg }]}>
+              <Text style={[styles.menuText, { color: colors.danger }]}>Block and unmatch</Text><Ionicons name="hand-left-outline" size={19} color={colors.danger} />
             </Pressable>
           </View>
         </Pressable>
@@ -178,25 +181,36 @@ export default function Chat() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", padding: 24, gap: 16 },
-  header: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
-  name: { fontFamily: font.bold, fontSize: 17, color: colors.ink, flexShrink: 1 },
-  messages: { padding: 14, gap: 8, flexGrow: 1 },
-  safety: { alignSelf: "center", maxWidth: 330, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FEF9C3", borderRadius: 14, padding: 10, marginBottom: 8 },
-  safetyText: { flex: 1, fontFamily: font.medium, fontSize: 12.5, color: "#713F12", lineHeight: 17 },
-  hint: { textAlign: "center", color: colors.muted, fontFamily: font.regular, fontSize: 15, marginTop: 24, lineHeight: 22 },
-  bubble: { maxWidth: "80%", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
-  mine: { alignSelf: "flex-end", backgroundColor: colors.brand, borderBottomRightRadius: 6 },
-  theirs: { alignSelf: "flex-start", backgroundColor: "#F2EEF4", borderBottomLeftRadius: 6 },
-  bubbleText: { fontFamily: font.regular, fontSize: 15.5, color: colors.ink, lineHeight: 21 },
-  inputBar: { flexDirection: "row", alignItems: "flex-end", gap: 8, paddingHorizontal: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.white },
-  wingman: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#F3E8FF", alignItems: "center", justifyContent: "center" },
-  input: {
-    flex: 1, minHeight: 44, maxHeight: 120, borderRadius: 22, borderWidth: 1.5, borderColor: colors.line, paddingHorizontal: 16,
-    paddingTop: 11, paddingBottom: 11, fontFamily: font.regular, fontSize: 15.5, color: colors.ink,
+  header: {
+    flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingTop: 4, paddingBottom: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline, backgroundColor: "#F9F9F9",
   },
-  send: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center" },
-  menuBackdrop: { flex: 1 },
-  menu: { position: "absolute", right: 12, backgroundColor: colors.white, borderRadius: 16, paddingVertical: 6, minWidth: 210, elevation: 8, shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 16 },
-  menuItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  menuText: { fontFamily: font.semibold, fontSize: 16, color: colors.ink },
+  navSide: { width: 56, justifyContent: "center" },
+  who: { flex: 1, alignItems: "center", gap: 3 },
+  name: { fontFamily: font.medium, fontSize: 12.5, color: colors.ink, flexShrink: 1 },
+  messages: { paddingHorizontal: 12, paddingVertical: 14, gap: 4, flexGrow: 1 },
+  safety: { alignSelf: "center", maxWidth: 300, flexDirection: "row", alignItems: "flex-start", gap: 6, marginBottom: 14, marginTop: 2 },
+  safetyText: { flex: 1, fontFamily: font.regular, fontSize: 12, color: colors.muted, lineHeight: 16, textAlign: "center" },
+  hint: { textAlign: "center", color: colors.muted, fontFamily: font.regular, fontSize: 15, marginTop: 24, lineHeight: 22 },
+  bubble: { maxWidth: "78%", borderRadius: 19, paddingHorizontal: 13, paddingVertical: 8, marginVertical: 1 },
+  mine: { alignSelf: "flex-end", backgroundColor: colors.brand, borderBottomRightRadius: 5 },
+  theirs: { alignSelf: "flex-start", backgroundColor: "#E9E9EB", borderBottomLeftRadius: 5 },
+  bubbleText: { fontFamily: font.regular, fontSize: 16, color: colors.ink, lineHeight: 21 },
+  inputBar: {
+    flexDirection: "row", alignItems: "flex-end", gap: 8, paddingHorizontal: 10, paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.hairline, backgroundColor: "#F9F9F9",
+  },
+  wingman: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.fill, alignItems: "center", justifyContent: "center" },
+  input: {
+    flex: 1, minHeight: 38, maxHeight: 120, borderRadius: 19, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline,
+    backgroundColor: colors.white, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 9, fontFamily: font.regular, fontSize: 16, color: colors.ink,
+  },
+  send: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center" },
+  menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.08)" },
+  menu: {
+    position: "absolute", right: 12, backgroundColor: colors.white, borderRadius: 14, minWidth: 220, overflow: "hidden",
+    elevation: 8, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 24, shadowOffset: { width: 0, height: 8 },
+  },
+  menuItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16, paddingVertical: 13 },
+  menuText: { fontFamily: font.regular, fontSize: 16, color: colors.ink },
 });

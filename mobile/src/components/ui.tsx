@@ -7,7 +7,9 @@ import {
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
-import { colors, font, gradient } from "../lib/theme";
+import { colors, font } from "../lib/theme";
+
+type IconName = keyof typeof Ionicons.glyphMap;
 
 /** Page wrapper: keeps content clear of the status bar / notch / gesture bar. */
 export function Screen({ children, edges = ["top"], style }: { children: ReactNode; edges?: Edge[]; style?: StyleProp<ViewStyle> }) {
@@ -18,6 +20,7 @@ export function Screen({ children, edges = ["top"], style }: { children: ReactNo
   );
 }
 
+/** Type scale modelled on iOS: large title, title, headline, body, footnote. */
 export function T({ children, style, variant = "body", numberOfLines }: {
   children: ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number;
   variant?: "title" | "h2" | "body" | "small" | "label";
@@ -28,42 +31,43 @@ export function T({ children, style, variant = "body", numberOfLines }: {
 type ButtonProps = {
   title: string;
   onPress?: () => void;
-  variant?: "primary" | "light" | "outline" | "ghost" | "danger" | "clear";
-  icon?: keyof typeof Ionicons.glyphMap;
+  /** primary: rose. secondary: grey fill. light: white (on photos/dark). ghost: rose text. danger: red text on red tint. clear: white text. */
+  variant?: "primary" | "secondary" | "light" | "ghost" | "danger" | "clear";
+  icon?: IconName;
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
+const BUTTON = {
+  primary: { bg: colors.brand, fg: colors.white },
+  secondary: { bg: colors.fill, fg: colors.ink },
+  light: { bg: colors.white, fg: colors.ink },
+  ghost: { bg: "transparent", fg: colors.brand },
+  danger: { bg: "rgba(255,59,48,0.12)", fg: colors.danger },
+  clear: { bg: "transparent", fg: colors.white },
+} as const;
+
 export function Button({ title, onPress, variant = "primary", icon, loading, disabled, style }: ButtonProps) {
   const off = disabled || loading;
-  const fg = variant === "primary" || variant === "danger" ? colors.white : variant === "light" ? colors.ink : variant === "outline" ? colors.ink : variant === "clear" ? colors.white : colors.brand;
-  const inner = (
-    <View style={styles.buttonInner}>
-      {loading ? <ActivityIndicator color={fg} /> : icon ? <Ionicons name={icon} size={20} color={fg} /> : null}
-      <Text style={[styles.buttonText, { color: fg }]}>{title}</Text>
-    </View>
-  );
+  const v = BUTTON[variant];
+  // Disabled filled buttons go grey (iOS), not a faded version of themselves.
+  const filled = variant === "primary" || variant === "danger";
+  const dim = off && !loading;
+  const bg = dim && filled ? colors.fill : v.bg;
+  const fg = dim ? colors.faint : v.fg;
   return (
     <Pressable
       onPress={onPress}
       disabled={off}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!off, busy: !!loading }}
-      style={({ pressed }) => [
-        styles.button,
-        variant === "primary" && { backgroundColor: colors.brand },
-        variant === "light" && { backgroundColor: colors.white },
-        variant === "outline" && { borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white },
-        variant === "danger" && { backgroundColor: colors.danger },
-        { opacity: off ? 0.55 : pressed ? 0.85 : 1 },
-        style,
-      ]}
+      style={({ pressed }) => [styles.button, { backgroundColor: bg, opacity: pressed ? 0.7 : 1 }, style]}
     >
-      {variant === "primary" ? (
-        <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      ) : null}
-      {inner}
+      <View style={styles.buttonInner}>
+        {loading ? <ActivityIndicator color={fg} /> : icon ? <Ionicons name={icon} size={19} color={fg} /> : null}
+        <Text style={[styles.buttonText, { color: fg }]}>{title}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -73,22 +77,16 @@ export function Field(props: TextInputProps & { label?: string }) {
   return (
     <View style={{ gap: 6 }}>
       {label ? <T variant="label">{label}</T> : null}
-      <TextInput placeholderTextColor="#A39AA8" {...rest} style={[styles.field, rest.multiline && { minHeight: 110, textAlignVertical: "top" }, style]} />
+      <TextInput placeholderTextColor={colors.faint} {...rest} style={[styles.field, rest.multiline && { minHeight: 110, textAlignVertical: "top" }, style]} />
     </View>
   );
 }
 
+/** iOS-style round checkmark. */
 export function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <Pressable
-      onPress={() => onChange(!checked)}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
-      style={styles.checkRow}
-    >
-      <View style={[styles.box, checked && { backgroundColor: colors.brand, borderColor: colors.brand }]}>
-        {checked ? <Ionicons name="checkmark" size={16} color={colors.white} /> : null}
-      </View>
+    <Pressable onPress={() => onChange(!checked)} accessibilityRole="checkbox" accessibilityState={{ checked }} style={styles.checkRow}>
+      <Ionicons name={checked ? "checkmark-circle" : "ellipse-outline"} size={26} color={checked ? colors.brand : colors.hairline} />
       <Text style={styles.checkLabel}>{label}</Text>
     </Pressable>
   );
@@ -110,7 +108,7 @@ export function Choice<V extends string | number>({ options, value, onChange, la
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              style={[styles.chip, on && { backgroundColor: colors.ink, borderColor: colors.ink }]}
+              style={[styles.chip, on && { backgroundColor: colors.ink }]}
             >
               <Text style={[styles.chipText, on && { color: colors.white }]}>{o.label}</Text>
             </Pressable>
@@ -121,24 +119,59 @@ export function Choice<V extends string | number>({ options, value, onChange, la
   );
 }
 
-export function Card({ children, style, tint }: { children: ReactNode; style?: StyleProp<ViewStyle>; tint?: string }) {
-  return <View style={[styles.card, tint ? { backgroundColor: tint, borderColor: "transparent" } : null, style]}>{children}</View>;
+/** Plain white surface. Use Group for lists of rows. */
+export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle>; tint?: string }) {
+  return <View style={[styles.card, style]}>{children}</View>;
 }
 
-type IconName = keyof typeof Ionicons.glyphMap;
+/** iOS inset grouped list: optional header and footer around white rows. */
+export function Group({ header, footer, children, style }: { header?: string; footer?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={style}>
+      {header ? <Text style={styles.groupHeader}>{header}</Text> : null}
+      <View style={styles.group}>{children}</View>
+      {footer ? <Text style={styles.groupFooter}>{footer}</Text> : null}
+    </View>
+  );
+}
+
+/** Settings-style row: coloured icon tile, title, optional value and chevron. */
+export function Row({ icon, tint, title, value, onPress, destructive, last, chevron = !!onPress, right }: {
+  icon?: IconName; tint?: string; title: string; value?: string; onPress?: () => void;
+  destructive?: boolean; last?: boolean; chevron?: boolean; right?: ReactNode;
+}) {
+  return (
+    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? "button" : undefined}
+      style={({ pressed }) => [styles.row, pressed && { backgroundColor: "#E5E5EA" }]}>
+      {icon ? (
+        <View style={[styles.tile, { backgroundColor: tint ?? colors.muted }]}>
+          <Ionicons name={icon} size={17} color={colors.white} />
+        </View>
+      ) : null}
+      <View style={[styles.rowBody, !last && styles.rowLine]}>
+        <Text style={[styles.rowTitle, destructive && { color: colors.danger }]} numberOfLines={1}>{title}</Text>
+        {value ? <Text style={styles.rowValue} numberOfLines={1}>{value}</Text> : null}
+        {right}
+        {chevron ? <Ionicons name="chevron-forward" size={18} color={colors.hairline} /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
 const TONES = {
-  error: { bg: "#FDECEC", fg: "#9B1C1C", icon: "alert-circle" },
-  success: { bg: "#E8F7EE", fg: "#14532D", icon: "checkmark-circle" },
-  info: { bg: "#EEF2FF", fg: "#1E3A8A", icon: "information-circle" },
-  warn: { bg: "#FEF9C3", fg: "#713F12", icon: "shield-checkmark" },
+  error: { fg: colors.danger, icon: "alert-circle" },
+  success: { fg: "#248A3D", icon: "checkmark-circle" },
+  info: { fg: colors.verified, icon: "information-circle" },
+  warn: { fg: "#A05A00", icon: "shield-checkmark" },
 } as const;
 
+/** One-line status message: coloured glyph + text, no coloured box. */
 export function Notice({ text, tone = "error", icon }: { text: string; tone?: keyof typeof TONES; icon?: IconName }) {
   const t = TONES[tone];
   return (
-    <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: t.bg }]}>
+    <View accessibilityRole="alert" style={styles.notice}>
       <Ionicons name={icon ?? t.icon} size={18} color={t.fg} />
-      <Text style={{ flex: 1, color: t.fg, fontFamily: font.medium, fontSize: 14, lineHeight: 20 }}>{text}</Text>
+      <Text style={[styles.noticeText, tone === "error" && { color: colors.danger }]}>{text}</Text>
     </View>
   );
 }
@@ -146,7 +179,7 @@ export function Notice({ text, tone = "error", icon }: { text: string; tone?: ke
 /** One line of copy led by an SF-style glyph. */
 export function IconLine({ icon, color, children }: { icon: IconName; color: string; children: ReactNode }) {
   return (
-    <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
+    <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
       <Ionicons name={icon} size={20} color={color} style={{ marginTop: 1 }} />
       <T style={{ flex: 1 }}>{children}</T>
     </View>
@@ -156,7 +189,7 @@ export function IconLine({ icon, color, children }: { icon: IconName; color: str
 /** iOS Contacts-style avatar: the photo, or initials on a soft grey gradient. */
 export function Avatar({ uri, name, size }: { uri?: string | null; name?: string | null; size: number }) {
   const round = { width: size, height: size, borderRadius: size / 2 };
-  if (uri) return <Image source={uri} style={[round, { backgroundColor: "#D1D1D6" }]} contentFit="cover" />;
+  if (uri) return <Image source={uri} style={[round, { backgroundColor: colors.line }]} contentFit="cover" />;
   const initials = (name ?? "").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
   return (
     <LinearGradient colors={["#A5ABB8", "#858994"]} style={[round, { alignItems: "center", justifyContent: "center" }]}>
@@ -169,25 +202,40 @@ export function Avatar({ uri, name, size }: { uri?: string | null; name?: string
   );
 }
 
+/** Small handle at the top of bottom sheets. */
+export function Grabber() {
+  return <View style={styles.grabber} />;
+}
+
 const styles = StyleSheet.create({
-  title: { fontFamily: font.black, fontSize: 30, color: colors.ink, letterSpacing: -0.5 },
-  h2: { fontFamily: font.bold, fontSize: 18, color: colors.ink },
-  body: { fontFamily: font.regular, fontSize: 15, color: colors.ink, lineHeight: 22 },
-  small: { fontFamily: font.regular, fontSize: 13, color: colors.muted, lineHeight: 18 },
-  label: { fontFamily: font.semibold, fontSize: 14, color: colors.ink },
-  button: { height: 56, borderRadius: 28, overflow: "hidden", justifyContent: "center" },
-  buttonInner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 20 },
-  buttonText: { fontFamily: font.bold, fontSize: 16 },
+  title: { fontFamily: font.black, fontSize: 32, lineHeight: 38, color: colors.ink, letterSpacing: -0.8 },
+  h2: { fontFamily: font.bold, fontSize: 20, lineHeight: 25, color: colors.ink, letterSpacing: -0.3 },
+  body: { fontFamily: font.regular, fontSize: 16, color: colors.ink, lineHeight: 22 },
+  small: { fontFamily: font.regular, fontSize: 13.5, color: colors.muted, lineHeight: 19 },
+  label: { fontFamily: font.semibold, fontSize: 15, color: colors.ink },
+  button: { height: 52, borderRadius: 14, justifyContent: "center" },
+  buttonInner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 18 },
+  buttonText: { fontFamily: font.semibold, fontSize: 16.5 },
   field: {
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.line, borderRadius: 16,
-    paddingHorizontal: 16, paddingVertical: 14, fontFamily: font.regular, fontSize: 16, color: colors.ink,
+    backgroundColor: colors.card, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline,
+    paddingHorizontal: 14, paddingVertical: 13, fontFamily: font.regular, fontSize: 16, color: colors.ink,
   },
-  checkRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
-  box: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: "#C9C0CE", alignItems: "center", justifyContent: "center" },
+  checkRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   checkLabel: { flex: 1, fontFamily: font.regular, fontSize: 15, color: colors.ink, lineHeight: 21 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white },
-  chipText: { fontFamily: font.semibold, fontSize: 14, color: colors.ink },
-  notice: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, padding: 12 },
-  card: { backgroundColor: colors.card, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.line, gap: 10 },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18, backgroundColor: colors.fill },
+  chipText: { fontFamily: font.medium, fontSize: 14.5, color: colors.ink },
+  card: { backgroundColor: colors.card, borderRadius: 14, padding: 16, gap: 10 },
+  group: { backgroundColor: colors.card, borderRadius: 12, overflow: "hidden" },
+  groupHeader: { fontFamily: font.medium, fontSize: 13, color: colors.muted, marginLeft: 16, marginBottom: 7 },
+  groupFooter: { fontFamily: font.regular, fontSize: 13, lineHeight: 18, color: colors.muted, marginHorizontal: 16, marginTop: 7 },
+  row: { flexDirection: "row", alignItems: "center", paddingLeft: 16, minHeight: 48, backgroundColor: colors.card },
+  tile: { width: 30, height: 30, borderRadius: 7, alignItems: "center", justifyContent: "center", marginRight: 14 },
+  rowBody: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "stretch", paddingRight: 14, minHeight: 48 },
+  rowLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline },
+  rowTitle: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.ink },
+  rowValue: { fontFamily: font.regular, fontSize: 15, color: colors.muted, maxWidth: "50%" },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 4 },
+  noticeText: { flex: 1, fontFamily: font.medium, fontSize: 14, lineHeight: 20, color: colors.ink },
+  grabber: { alignSelf: "center", width: 36, height: 5, borderRadius: 3, backgroundColor: colors.hairline, marginBottom: 6 },
 });

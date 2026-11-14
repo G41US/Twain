@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../lib/api";
 import { tell } from "../lib/dialog";
 import { colors } from "../lib/theme";
-import { Button, Choice, Field, T } from "./ui";
+import { Ionicons } from "@expo/vector-icons";
+import { Button, Field, Grabber, Group, Row, T } from "./ui";
 
 const REASONS = [
   "Fake profile / stolen photos",
@@ -45,12 +46,20 @@ export function ReportSheet({ target, onDone }: { target: { id: string; name: st
     <Modal visible={!!target} transparent animationType="slide" onRequestClose={() => close(false)}>
       <Pressable style={styles.backdrop} onPress={() => close(false)} accessibilityLabel="Close" />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-        <T variant="h2">Report {target?.name ?? "this person"}</T>
-        <T variant="small">They won&apos;t know you reported them.</T>
-        <Choice options={REASONS} value={reason} onChange={setReason} />
+        <Grabber />
+        <View style={{ gap: 4 }}>
+          <T variant="h2">Report {target?.name ?? "this person"}</T>
+          <T variant="small">They won&apos;t know you reported them.</T>
+        </View>
+        <Group>
+          {REASONS.map((r, i) => (
+            <Row key={r.value} title={r.label} onPress={() => setReason(r.value)} chevron={false} last={i === REASONS.length - 1}
+              right={reason === r.value ? <Ionicons name="checkmark" size={20} color={colors.brand} /> : null} />
+          ))}
+        </Group>
         <Field value={details} onChangeText={setDetails} placeholder="Anything else we should know? (optional)" maxLength={300} multiline />
         <Button title="Send report" variant="danger" onPress={send} loading={busy} disabled={!reason} />
-        <Button title="Cancel" variant="ghost" onPress={() => close(false)} />
+        <Button title="Cancel" variant="ghost" onPress={() => close(false)} style={{ marginTop: -6 }} />
       </View>
     </Modal>
   );
@@ -58,5 +67,5 @@ export function ReportSheet({ target, onDone }: { target: { id: string; name: st
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
-  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, gap: 14 },
+  sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 14, borderTopRightRadius: 14, paddingHorizontal: 16, paddingTop: 8, gap: 14 },
 });

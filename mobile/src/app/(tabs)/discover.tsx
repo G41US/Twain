@@ -10,7 +10,7 @@ import { Button, Screen, T } from "../../components/ui";
 import { useProfile } from "../../ctx/profile";
 import { api, ApiError } from "../../lib/api";
 import { tell } from "../../lib/dialog";
-import { colors, font, gradient } from "../../lib/theme";
+import { colors, font } from "../../lib/theme";
 
 type Person = {
   id: string; name: string | null; age: number | null; bio: string | null; photos: string[];
@@ -100,18 +100,18 @@ export default function Discover() {
       <View style={styles.header}>
         <Text style={styles.logo}>Twain<Text style={{ color: colors.brand }}>.</Text></Text>
         <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Edit preferences" hitSlop={10}>
-          <Ionicons name="options" size={26} color={colors.ink} />
+          <Ionicons name="options-outline" size={26} color={colors.ink} />
         </Pressable>
       </View>
 
       {!top ? (
         <View style={styles.center}>
-          <Ionicons name="people" size={56} color="#D9CFE0" />
+          <Ionicons name="people-outline" size={52} color={colors.hairline} />
           <T variant="h2" style={{ textAlign: "center" }}>{error ? "Couldn't load" : "No one new nearby right now"}</T>
           <T variant="small" style={{ textAlign: "center" }}>
             {error || `Try a bigger distance (now ${me?.maxDistanceKm ?? 50} km) or age range, or check back later.`}
           </T>
-          <Button title="Refresh" icon="refresh" variant="outline" onPress={() => { setPeople(null); load(); }} style={{ alignSelf: "stretch" }} />
+          <Button title="Refresh" icon="refresh" variant="secondary" onPress={() => { setPeople(null); load(); }} style={{ alignSelf: "stretch" }} />
         </View>
       ) : (
         <>
@@ -132,22 +132,26 @@ export default function Discover() {
                   {top.photos.map((p, i) => <View key={p} style={[styles.dot, i === photoIndex && { backgroundColor: colors.white }]} />)}
                 </View>
               ) : null}
-              <Animated.View style={[styles.stamp, styles.like, { opacity: likeOpacity }]}><Text style={[styles.stampText, { color: "#22C55E" }]}>LIKE</Text></Animated.View>
-              <Animated.View style={[styles.stamp, styles.nope, { opacity: nopeOpacity }]}><Text style={[styles.stampText, { color: "#EF4444" }]}>NOPE</Text></Animated.View>
+              <Animated.View style={[styles.stamp, styles.like, { opacity: likeOpacity }]}>
+                <Ionicons name="heart" size={22} color={colors.white} /><Text style={styles.stampText}>Like</Text>
+              </Animated.View>
+              <Animated.View style={[styles.stamp, styles.nope, { opacity: nopeOpacity }]}>
+                <Ionicons name="close" size={22} color={colors.white} /><Text style={styles.stampText}>Pass</Text>
+              </Animated.View>
 
               <Pressable onPress={() => setReporting(top)} style={styles.flag} accessibilityRole="button" accessibilityLabel="Report profile" hitSlop={8}>
-                <Ionicons name="flag" size={16} color={colors.white} />
+                <Ionicons name="flag-outline" size={17} color={colors.white} />
               </Pressable>
 
-              <LinearGradient colors={["transparent", "rgba(0,0,0,0.55)", "rgba(0,0,0,0.92)"]} style={styles.info}>
+              <LinearGradient colors={["transparent", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.85)"]} style={styles.info}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                   <Text style={styles.name} numberOfLines={1}>{top.name ?? "Someone"}, {top.age ?? "?"}</Text>
-                  {top.verified ? <Ionicons name="checkmark-circle" size={24} color={colors.verified} accessibilityLabel="Verified" /> : null}
+                  {top.verified ? <Ionicons name="checkmark-circle" size={22} color={colors.white} accessibilityLabel="Verified" /> : null}
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Ionicons name="location" size={14} color="rgba(255,255,255,0.85)" /><Text style={styles.meta}>{top.distanceKm} km away</Text></View>
                 <View style={styles.tags}>
-                  {top.vibe !== null ? <Tag icon="sparkles" text={`${top.vibe}% vibe match`} bg="#7C3AED" /> : null}
-                  <Tag text={top.replyRate === null ? "New here" : `Replies ${Math.round(top.replyRate)}%`} bg="#16A34A" />
+                  {top.vibe !== null ? <Tag icon="sparkles" text={`${top.vibe}% vibe match`} /> : null}
+                  <Tag icon="chatbubble-ellipses" text={top.replyRate === null ? "New here" : `Replies ${Math.round(top.replyRate)}%`} />
                 </View>
                 {top.bio ? <Text style={styles.bio} numberOfLines={3}>{top.bio}</Text> : null}
                 {top.voiceIntroUrl ? <VoicePlayer key={top.id} url={top.voiceIntroUrl} light /> : null}
@@ -156,8 +160,8 @@ export default function Discover() {
           </View>
 
           <View style={styles.actions}>
-            <RoundButton icon="close" color="#EF4444" label="Pass" onPress={() => swipe("left")} />
-            <RoundButton icon="heart" color={colors.brand} label="Like" onPress={() => swipe("right")} big />
+            <RoundButton icon="close" label="Pass" onPress={() => swipe("left")} />
+            <RoundButton icon="heart" label="Like" onPress={() => swipe("right")} primary />
           </View>
         </>
       )}
@@ -165,66 +169,66 @@ export default function Discover() {
       <ReportSheet target={reporting} onDone={(sent) => { setReporting(null); if (sent) next(); }} />
 
       <Modal visible={!!match} transparent animationType="fade" onRequestClose={() => setMatch(null)}>
-        <LinearGradient colors={gradient} style={styles.matchWrap}>
-          <Text style={styles.matchTitle}>It&apos;s a match!</Text>
+        <View style={styles.matchWrap}>
+          <Text style={styles.matchTitle}>It&apos;s a match</Text>
           <Text style={styles.matchSub}>You and {match?.person.name ?? "they"} like each other.</Text>
           <View style={styles.matchPhotos}>
             {me?.photos[0] ? <Image source={me.photos[0]} style={[styles.matchPhoto, { transform: [{ rotate: "-8deg" }] }]} /> : null}
             {match?.person.photos[0] ? <Image source={match.person.photos[0]} style={[styles.matchPhoto, { transform: [{ rotate: "8deg" }], marginLeft: -24 }]} /> : null}
           </View>
-          <Button title="Send a message" variant="light" icon="chatbubble"
+          <Button title="Send a message" icon="chatbubble"
             onPress={() => { const id = match!.matchId; setMatch(null); router.push(`/chat/${id}`); }} style={{ alignSelf: "stretch" }} />
           <Button title="Keep swiping" variant="clear" onPress={() => setMatch(null)} style={{ alignSelf: "stretch" }} />
-        </LinearGradient>
+        </View>
       </Modal>
     </Screen>
   );
 }
 
-function Tag({ text, bg, icon }: { text: string; bg: string; icon?: keyof typeof Ionicons.glyphMap }) {
+function Tag({ text, icon }: { text: string; icon?: keyof typeof Ionicons.glyphMap }) {
   return (
-    <View style={[styles.tag, { backgroundColor: bg, flexDirection: "row", alignItems: "center", gap: 4 }]}>
-      {icon ? <Ionicons name={icon} size={12} color="#fff" /> : null}
+    <View style={styles.tag}>
+      {icon ? <Ionicons name={icon} size={13} color={colors.white} /> : null}
       <Text style={styles.tagText}>{text}</Text>
     </View>
   );
 }
 
-function RoundButton({ icon, color, label, onPress, big }: { icon: keyof typeof Ionicons.glyphMap; color: string; label: string; onPress: () => void; big?: boolean }) {
-  const size = big ? 72 : 62;
+function RoundButton({ icon, label, onPress, primary }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; primary?: boolean }) {
+  const size = primary ? 68 : 60;
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => [styles.round, { width: size, height: size, borderRadius: size / 2, transform: [{ scale: pressed ? 0.92 : 1 }] }]}>
-      <Ionicons name={icon} size={big ? 36 : 30} color={color} />
+      style={({ pressed }) => [styles.round, primary && { backgroundColor: colors.brand }, { width: size, height: size, borderRadius: size / 2, transform: [{ scale: pressed ? 0.92 : 1 }] }]}>
+      <Ionicons name={icon} size={primary ? 32 : 28} color={primary ? colors.white : colors.ink} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 8 },
-  logo: { fontFamily: font.black, fontSize: 28, color: colors.ink, letterSpacing: -1 },
+  logo: { fontFamily: font.black, fontSize: 30, color: colors.ink, letterSpacing: -1.2 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 },
   deck: { flex: 1, marginHorizontal: 12, marginTop: 4 },
-  card: { ...StyleSheet.absoluteFill, borderRadius: 28, overflow: "hidden", backgroundColor: "#2A1F2E" },
+  card: { ...StyleSheet.absoluteFill, borderRadius: 24, overflow: "hidden", backgroundColor: "#1C1C1E" },
   dots: { position: "absolute", top: 10, left: 12, right: 12, flexDirection: "row", gap: 4 },
   dot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.4)" },
-  stamp: { position: "absolute", top: 48, borderWidth: 4, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  like: { left: 22, borderColor: "#22C55E", transform: [{ rotate: "-14deg" }] },
-  nope: { right: 22, borderColor: "#EF4444", transform: [{ rotate: "14deg" }] },
-  stampText: { fontFamily: font.black, fontSize: 34, letterSpacing: 2 },
-  flag: { position: "absolute", top: 24, right: 14, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  stamp: { position: "absolute", top: 40, flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 9 },
+  like: { left: 18, backgroundColor: colors.brand },
+  nope: { right: 18, backgroundColor: "rgba(28,28,30,0.85)" },
+  stampText: { fontFamily: font.bold, fontSize: 18, color: colors.white },
+  flag: { position: "absolute", top: 24, right: 14, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.32)", alignItems: "center", justifyContent: "center" },
   info: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 80, paddingBottom: 20, gap: 8 },
-  name: { color: colors.white, fontFamily: font.black, fontSize: 30, flexShrink: 1 },
+  name: { color: colors.white, fontFamily: font.bold, fontSize: 30, letterSpacing: -0.6, flexShrink: 1 },
   meta: { color: "rgba(255,255,255,0.85)", fontFamily: font.medium, fontSize: 14 },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tag: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
-  tagText: { color: colors.white, fontFamily: font.bold, fontSize: 12 },
+  tag: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 13, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: "rgba(255,255,255,0.2)" },
+  tagText: { color: colors.white, fontFamily: font.semibold, fontSize: 12.5 },
   bio: { color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
-  actions: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 40, paddingVertical: 14 },
+  actions: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 36, paddingVertical: 14 },
   round: { backgroundColor: colors.white, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  matchWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 14 },
-  matchTitle: { color: colors.white, fontFamily: font.black, fontSize: 44, letterSpacing: -1, textAlign: "center" },
-  matchSub: { color: "rgba(255,255,255,0.9)", fontFamily: font.medium, fontSize: 17, textAlign: "center" },
-  matchPhotos: { flexDirection: "row", marginVertical: 24 },
-  matchPhoto: { width: 130, height: 170, borderRadius: 22, borderWidth: 4, borderColor: colors.white },
+  matchWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 12, backgroundColor: colors.plum },
+  matchTitle: { color: colors.white, fontFamily: font.black, fontSize: 40, letterSpacing: -1.2, textAlign: "center" },
+  matchSub: { color: "rgba(255,255,255,0.7)", fontFamily: font.regular, fontSize: 16, textAlign: "center" },
+  matchPhotos: { flexDirection: "row", marginVertical: 28 },
+  matchPhoto: { width: 136, height: 180, borderRadius: 20, borderWidth: 3, borderColor: colors.white, backgroundColor: "#2C2C2E" },
 });

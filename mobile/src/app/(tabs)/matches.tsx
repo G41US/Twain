@@ -27,7 +27,7 @@ export default function Matches() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
-    <Screen>
+    <Screen style={{ backgroundColor: colors.white }}>
       <T variant="title" style={styles.title}>Matches</T>
       {items === null ? (
         <ActivityIndicator color={colors.brand} style={{ marginTop: 40 }} />
@@ -36,11 +36,10 @@ export default function Matches() {
           data={items}
           keyExtractor={(m) => m.matchId}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} tintColor={colors.brand} />}
-          contentContainerStyle={items.length === 0 ? { flex: 1 } : { paddingHorizontal: 16, paddingBottom: 16 }}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          contentContainerStyle={items.length === 0 ? { flex: 1 } : { paddingBottom: 16 }}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="heart-outline" size={56} color="#D8C8E0" />
+              <Ionicons name="chatbubbles-outline" size={52} color={colors.hairline} />
               <T variant="h2">No matches yet</T>
               <T variant="small" style={{ textAlign: "center" }}>When you and someone like each other, you&apos;ll find them here.</T>
             </View>
@@ -50,19 +49,21 @@ export default function Matches() {
               onPress={() => router.push(`/chat/${item.matchId}`)}
               accessibilityRole="button"
               accessibilityLabel={`Chat with ${item.user.name ?? "your match"}`}
-              style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
+              style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.bg }]}
             >
-              <Avatar uri={item.user.photos[0] || item.user.image} name={item.user.name} size={58} />
-              <View style={{ flex: 1, minWidth: 0 }}>
+              <Avatar uri={item.user.photos[0] || item.user.image} name={item.user.name} size={54} />
+              <View style={styles.rowBody}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Text style={styles.name} numberOfLines={1}>{item.user.name ?? "Your match"}</Text>
                   {item.user.verified ? <Ionicons name="checkmark-circle" size={16} color={colors.verified} /> : null}
                 </View>
-                <Text style={[styles.last, !item.lastMessage && { color: colors.brand }]} numberOfLines={1}>
-                  {item.lastMessage ?? "New match — say hi 👋"}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  {!item.lastMessage ? <View style={styles.newDot} /> : null}
+                  <Text style={[styles.last, !item.lastMessage && { color: colors.ink, fontFamily: font.medium }]} numberOfLines={2}>
+                    {item.lastMessage ?? "New match. Say hi 👋"}
+                  </Text>
+                </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#C9C0CE" />
             </Pressable>
           )}
         />
@@ -72,9 +73,11 @@ export default function Matches() {
 }
 
 const styles = StyleSheet.create({
-  title: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  title: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10, padding: 32 },
-  row: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.white, borderRadius: 20, padding: 12, borderWidth: 1, borderColor: colors.line },
-  name: { fontFamily: font.bold, fontSize: 16, color: colors.ink, flexShrink: 1 },
-  last: { fontFamily: font.regular, fontSize: 14, color: colors.muted, marginTop: 2 },
+  row: { flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 16 },
+  rowBody: { flex: 1, minWidth: 0, paddingVertical: 14, paddingRight: 16, gap: 2, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline },
+  name: { fontFamily: font.semibold, fontSize: 16.5, color: colors.ink, flexShrink: 1 },
+  last: { flexShrink: 1, fontFamily: font.regular, fontSize: 14.5, lineHeight: 19, color: colors.muted },
+  newDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.brand },
 });

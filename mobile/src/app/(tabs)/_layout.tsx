@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, font } from "../../lib/theme";
 
@@ -10,9 +11,9 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.brand,
-        tabBarInactiveTintColor: "#9A90A0",
-        tabBarLabelStyle: { fontFamily: font.semibold, fontSize: 12, lineHeight: 16 },
-        tabBarStyle: { borderTopColor: colors.line, backgroundColor: colors.white, height: 62 + insets.bottom, paddingTop: 6, paddingBottom: insets.bottom + 6 },
+        tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontFamily: font.medium, fontSize: 11, lineHeight: 14 },
+        tabBarStyle: { borderTopColor: colors.hairline, borderTopWidth: StyleSheet.hairlineWidth, backgroundColor: "#F9F9F9", height: 62 + insets.bottom, paddingTop: 6, paddingBottom: insets.bottom + 6 },
       }}
     >
       <Tabs.Screen name="discover" options={{ title: "Discover", tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? "flame" : "flame-outline"} color={color as string} size={size} /> }} />

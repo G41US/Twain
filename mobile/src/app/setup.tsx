@@ -60,15 +60,15 @@ export default function Setup() {
           {STEPS.map((s, i) => <View key={s} style={[styles.bar, i <= step && { backgroundColor: colors.brand }]} />)}
         </View>
         <ScrollView ref={scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <T variant="title">{name}</T>
+          <T variant="title">{name === "Welcome" ? "Welcome to Twain" : name}</T>
           {sections[name]}
           {error ? <Notice text={error} /> : null}
         </ScrollView>
         <View style={styles.footer}>
           {step > 0 ? (
-            <Button title="Back" variant="outline" style={{ minWidth: 116 }} onPress={() => { setError(""); setStep(step - 1); }} />
+            <Button title="Back" variant="secondary" style={{ minWidth: 116 }} onPress={() => { setError(""); setStep(step - 1); }} />
           ) : (
-            <Button title="Sign out" variant="outline" style={{ minWidth: 116 }} onPress={signOut} />
+            <Button title="Sign out" variant="secondary" style={{ minWidth: 116 }} onPress={signOut} />
           )}
           <Button
             title={last ? "Start swiping" : name === "Voice intro" && !form.voiceIntroUrl ? "Skip for now" : "Next"}
@@ -85,7 +85,7 @@ export default function Setup() {
 
 const styles = StyleSheet.create({
   progress: { flexDirection: "row", gap: 5, paddingHorizontal: 20, paddingTop: 8 },
-  bar: { flex: 1, height: 5, borderRadius: 3, backgroundColor: colors.line },
+  bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.hairline },
   content: { padding: 20, gap: 18, paddingBottom: 32 },
-  footer: { flexDirection: "row", gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.bg },
+  footer: { flexDirection: "row", gap: 12, paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.hairline, backgroundColor: colors.bg },
 });
