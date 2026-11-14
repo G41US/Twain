@@ -1,5 +1,7 @@
-# Builds the native Twain Android app (mobile/) — APK to install, AAB for the Play Store —
-# on every change to mobile/, or by hand from the Actions tab. Signing needs four repo secrets
+# Builds the native Twain Android app (mobile/) on every change to mobile/, or by hand from the Actions tab.
+# When mobile/app.json has a new expo.version, it publishes release app-v<version> with Twain.apk and the
+# app-version.json the in-app updater reads (twain-coral.vercel.app/app-version.json redirects to it).
+# Signing needs four repo secrets
 # (Settings → Secrets and variables → Actions):
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
 # Without them it still builds, but signed with a throwaway debug key (fine to try, not for Play).
@@ -63,18 +65,42 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleRelease bundleRelease --no-daemon
 
-      # The in-app update prompt downloads releases/latest/download/Twain.apk.
-      - name: Name the APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/Twain.apk
+      # A new version in mobile/app.json becomes a release; the app's update check reads its app-version.json.
+      - name: Prepare release files
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(node -p "require('./app.json').expo.version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if gh release view "app-v$V" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "new=false" >> "$GITHUB_OUTPUT"; echo "app-v$V is already released; bump expo.version to publish."
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+          OUT=android/app/build/outputs/apk/release
+          cp "$OUT/app-release.apk" "$OUT/Twain.apk"
+          node -e '
+            const c = require("./app.json").expo, fs = require("fs");
+            const notes = fs.existsSync("release-notes.txt") ? fs.readFileSync("release-notes.txt", "utf8").trim() : "";
+            fs.writeFileSync(process.argv[1], JSON.stringify({
+              versionCode: c.android.versionCode, version: c.version, notes, minVersionCode: 1,
+              url: `https://github.com/${process.env.GITHUB_REPOSITORY}/releases/download/app-v${c.version}/Twain.apk`,
+            }, null, 2));
+          ' "$OUT/app-version.json"
+          cat "$OUT/app-version.json"
 
-      - name: Publish release (download the APK on your phone from the Releases page)
-        if: env.ANDROID_KEYSTORE_PATH != ''
+      - name: Publish release
+        if: env.ANDROID_KEYSTORE_PATH != '' && steps.rel.outputs.new == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: app-v1.0.${{ github.run_number }}
-          name: Twain 1.0.${{ github.run_number }}
+          tag_name: app-v${{ steps.rel.outputs.version }}
+          name: Twain ${{ steps.rel.outputs.version }}
+          body_path: mobile/release-notes.txt
+          make_latest: true
           files: |
             mobile/android/app/build/outputs/apk/release/Twain.apk
+            mobile/android/app/build/outputs/apk/release/app-version.json
             mobile/android/app/build/outputs/bundle/release/app-release.aab
 
       - uses: actions/upload-artifact@v4

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NotificationsCard } from "../../components/notifications-card";
+import { checkForUpdate, installedVersion } from "../../components/update-prompt";
 import {
   AboutSection, formFrom, PhotosSection, PreferencesSection, saveSteps, VibesSection, VoiceSection, WhereSection,
   type Form, type Step,
@@ -111,6 +112,10 @@ export default function Profile() {
           {me.isAdmin ? <Row icon="shield-checkmark" tint={tile.indigo} title="Admin dashboard" onPress={link("/admin")} /> : null}
           <Row icon="document-text" tint={tile.gray} title="Terms" onPress={link("/terms")} />
           <Row icon="lock-closed" tint={tile.gray} title="Privacy" onPress={link("/privacy")} last />
+        </Group>
+
+        <Group footer={`Twain ${installedVersion}`}>
+          <Row icon="arrow-down-circle" tint={tile.green} title="Check for updates" onPress={() => checkForUpdate(true)} last />
         </Group>
 
         <Group>
