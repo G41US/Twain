@@ -144,9 +144,9 @@ export default function Discover() {
                   <Text style={styles.name} numberOfLines={1}>{top.name ?? "Someone"}, {top.age ?? "?"}</Text>
                   {top.verified ? <Ionicons name="checkmark-circle" size={24} color={colors.verified} accessibilityLabel="Verified" /> : null}
                 </View>
-                <Text style={styles.meta}>📍 {top.distanceKm} km away</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Ionicons name="location" size={14} color="rgba(255,255,255,0.85)" /><Text style={styles.meta}>{top.distanceKm} km away</Text></View>
                 <View style={styles.tags}>
-                  {top.vibe !== null ? <Tag text={`✨ ${top.vibe}% vibe match`} bg="#7C3AED" /> : null}
+                  {top.vibe !== null ? <Tag icon="sparkles" text={`${top.vibe}% vibe match`} bg="#7C3AED" /> : null}
                   <Tag text={top.replyRate === null ? "New here" : `Replies ${Math.round(top.replyRate)}%`} bg="#16A34A" />
                 </View>
                 {top.bio ? <Text style={styles.bio} numberOfLines={3}>{top.bio}</Text> : null}
@@ -181,8 +181,13 @@ export default function Discover() {
   );
 }
 
-function Tag({ text, bg }: { text: string; bg: string }) {
-  return <View style={[styles.tag, { backgroundColor: bg }]}><Text style={styles.tagText}>{text}</Text></View>;
+function Tag({ text, bg, icon }: { text: string; bg: string; icon?: keyof typeof Ionicons.glyphMap }) {
+  return (
+    <View style={[styles.tag, { backgroundColor: bg, flexDirection: "row", alignItems: "center", gap: 4 }]}>
+      {icon ? <Ionicons name={icon} size={12} color="#fff" /> : null}
+      <Text style={styles.tagText}>{text}</Text>
+    </View>
+  );
 }
 
 function RoundButton({ icon, color, label, onPress, big }: { icon: keyof typeof Ionicons.glyphMap; color: string; label: string; onPress: () => void; big?: boolean }) {

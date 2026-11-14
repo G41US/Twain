@@ -13,7 +13,7 @@ import { api, mimeFor, uploadFile } from "../lib/api";
 import { API_URL } from "../lib/config";
 import { CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, LOOKING_FOR, slug, TRAITS, VIBE_QUESTIONS } from "../lib/options";
 import { colors, font } from "../lib/theme";
-import { Card, Check, Choice, Field, T } from "./ui";
+import { Card, Check, Choice, Field, T, IconLine, Notice } from "./ui";
 
 export const MAX_PHOTOS = 6;
 const MAX_VOICE_MS = 30_000;
@@ -28,7 +28,7 @@ export type Form = {
 export const formFrom = (p: Me): Form => ({
   acceptTerms: !!p.acceptedTermsAt, photos: p.photos ?? [], bio: p.bio ?? "", age: p.age?.toString() ?? "",
   gender: p.gender ?? "", lookingFor: p.lookingFor ?? "", latitude: p.latitude, longitude: p.longitude,
-  locationLabel: p.latitude !== null ? "Location saved ✓" : "", maxDistanceKm: p.maxDistanceKm,
+  locationLabel: p.latitude !== null ? "Location saved" : "", maxDistanceKm: p.maxDistanceKm,
   ageMin: String(p.ageMin), ageMax: String(p.ageMax), voiceIntroUrl: p.voiceIntroUrl ?? "",
   vibeAnswers: p.vibeAnswers ?? {}, traits: p.traits ?? [], dealbreakers: p.dealbreakers ?? [],
   ethnicity: p.ethnicity ?? "", preferEthnicity: p.preferEthnicity ?? "all", sensitiveConsent: !!p.sensitiveConsentAt,
@@ -85,9 +85,9 @@ export function WelcomeSection({ form, set }: SectionProps) {
     <View style={{ gap: 16 }}>
       <T>Let&apos;s set up your profile. It takes about 2 minutes.</T>
       <Card tint="#FFF0F5">
-        <T>✅  Be yourself: real photos, real age.</T>
-        <T>🚫  Never send money to anyone you meet here.</T>
-        <T>⚑  Report anyone who makes you uncomfortable.</T>
+        <IconLine icon="checkmark-circle" color="#16A34A">Be yourself: real photos, real age.</IconLine>
+        <IconLine icon="hand-left" color="#DC2626">Never send money to anyone you meet here.</IconLine>
+        <IconLine icon="flag" color={colors.violet}>Report anyone who makes you uncomfortable.</IconLine>
       </Card>
       <Check checked={form.acceptTerms} onChange={(v) => set({ acceptTerms: v })} label="I'm 18 or older and I agree to the Terms and Privacy Policy." />
       <View style={{ flexDirection: "row", gap: 20 }}>
@@ -164,7 +164,7 @@ export function WhereSection({ form, set, setError }: SectionProps) {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") throw new Error();
       const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      set({ latitude: p.coords.latitude, longitude: p.coords.longitude, locationLabel: "Using your current location ✓" });
+      set({ latitude: p.coords.latitude, longitude: p.coords.longitude, locationLabel: "Using your current location" });
     } catch {
       setError("Couldn't get your location — pick your city instead.");
       setShowCities(true);
@@ -183,10 +183,10 @@ export function WhereSection({ form, set, setError }: SectionProps) {
           <Choice
             options={CITIES.map((c, i) => ({ value: i, label: c.name }))}
             value={CITIES.findIndex((c) => c.lat === form.latitude && c.lng === form.longitude)}
-            onChange={(i) => set({ latitude: CITIES[i].lat, longitude: CITIES[i].lng, locationLabel: `${CITIES[i].name} ✓` })}
+            onChange={(i) => set({ latitude: CITIES[i].lat, longitude: CITIES[i].lng, locationLabel: CITIES[i].name })}
           />
         ) : null}
-        {form.locationLabel ? <T variant="label" style={{ color: "#1E3A8A" }}>{form.locationLabel}</T> : null}
+        {form.locationLabel ? <Notice tone="info" icon="location" text={form.locationLabel} /> : null}
       </Card>
       <Choice
         label="Show people within"
@@ -316,7 +316,7 @@ export function PreferencesSection({ form, set }: SectionProps) {
           label="I consent to Twain storing my ethnicity, which is sensitive personal data, only for matching filters. I can remove it any time." />
       ) : null}
       <Choice
-        label="🔒 Who do you prefer to see? (private)"
+        label="Who do you prefer to see? (private, never shown)"
         options={[{ value: "all", label: "Everyone" }, ...ETHNICITIES.map((e) => ({ value: slug(e), label: e }))]}
         value={form.preferEthnicity}
         onChange={(v) => set({ preferEthnicity: v })}

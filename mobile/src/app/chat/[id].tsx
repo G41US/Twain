@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -8,7 +7,7 @@ import {
 import type { ScrollViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ReportSheet } from "../../components/report-sheet";
-import { Button, Screen, T } from "../../components/ui";
+import { Avatar, Button, Screen, T } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { ask, tell } from "../../lib/dialog";
 import { colors, font } from "../../lib/theme";
@@ -103,7 +102,7 @@ export default function Chat() {
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
           <Ionicons name="chevron-back" size={28} color={colors.ink} />
         </Pressable>
-        {other ? <Image source={other.photos[0] || other.image} style={styles.avatar} /> : <View style={styles.avatar} />}
+        <Avatar uri={other?.photos[0] || other?.image} name={other?.name} size={40} />
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 4 }}>
           <Text style={styles.name} numberOfLines={1}>{other?.name ?? "…"}</Text>
           {other?.verified ? <Ionicons name="checkmark-circle" size={18} color={colors.verified} accessibilityLabel="Verified" /> : null}
@@ -121,11 +120,12 @@ export default function Chat() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.safety}>
-            <Text style={styles.safetyText}>🛡️ Never send money, airtime or bank details to anyone you meet here. Report anyone who asks.</Text>
+            <Ionicons name="shield-checkmark" size={16} color="#713F12" />
+            <Text style={styles.safetyText}>Never send money, airtime or bank details to anyone you meet here. Report anyone who asks.</Text>
           </View>
           {messages === null ? <ActivityIndicator color={colors.brand} /> : null}
           {messages?.length === 0 ? (
-            <Text style={styles.hint}>You matched! Say hi 👋{"\n"}Stuck? Tap ✨ for an opener.</Text>
+            <Text style={styles.hint}>You matched! Say hi 👋{"\n"}Stuck? Tap the sparkles for an opener.</Text>
           ) : null}
           {messages?.map((m) => {
             const mine = m.senderId === me;
@@ -139,7 +139,7 @@ export default function Chat() {
 
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
           <Pressable onPress={wingman} disabled={thinking} accessibilityRole="button" accessibilityLabel="AI wingman suggestion" style={styles.wingman}>
-            {thinking ? <ActivityIndicator color={colors.violet} /> : <Text style={{ fontSize: 20 }}>✨</Text>}
+            {thinking ? <ActivityIndicator color={colors.violet} /> : <Ionicons name="sparkles" size={20} color={colors.violet} />}
           </Pressable>
           <TextInput
             value={input}
@@ -179,11 +179,10 @@ export default function Chat() {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", padding: 24, gap: 16 },
   header: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.line },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEE8F1" },
   name: { fontFamily: font.bold, fontSize: 17, color: colors.ink, flexShrink: 1 },
   messages: { padding: 14, gap: 8, flexGrow: 1 },
-  safety: { alignSelf: "center", maxWidth: 320, backgroundColor: "#FEF9C3", borderRadius: 14, padding: 10, marginBottom: 8 },
-  safetyText: { fontFamily: font.medium, fontSize: 12.5, color: "#713F12", textAlign: "center", lineHeight: 17 },
+  safety: { alignSelf: "center", maxWidth: 330, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FEF9C3", borderRadius: 14, padding: 10, marginBottom: 8 },
+  safetyText: { flex: 1, fontFamily: font.medium, fontSize: 12.5, color: "#713F12", lineHeight: 17 },
   hint: { textAlign: "center", color: colors.muted, fontFamily: font.regular, fontSize: 15, marginTop: 24, lineHeight: 22 },
   bubble: { maxWidth: "80%", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
   mine: { alignSelf: "flex-end", backgroundColor: colors.brand, borderBottomRightRadius: 6 },

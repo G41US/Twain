@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { redirect } from "next/navigation";
+import Icon, { type IconName } from "../components/Icon";
 import BanButton from "./BanButton";
 import VerifyButtons from "./VerifyButtons";
 
@@ -13,6 +14,7 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "
 const when = (d: Date) =>
   d.toLocaleString("en-GB", { timeZone: "Africa/Lagos", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const pct = (n: number | null) => (n === null ? "—" : `${Math.round(n)}%`);
+const initials = (name: string | null) => (name ?? "").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 
 export default async function Admin() {
   const me = await getCurrentUser();
@@ -103,7 +105,7 @@ export default async function Admin() {
         </section>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <Panel title="Verification requests" count={pending.length} empty="No selfies waiting for review.">
+          <Panel icon="checkmark-circle" title="Verification requests" count={pending.length} empty="No selfies waiting for review.">
             {pending.map((u) => (
               <div key={u.id} className="p-5">
                 <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -124,7 +126,7 @@ export default async function Admin() {
             ))}
           </Panel>
 
-          <Panel title="Reports" count={reports.length} empty="No one has been reported.">
+          <Panel icon="flag" title="Reports" count={reports.length} empty="No one has been reported.">
             {reports.map((r) => (
               <div key={r.id} className="flex items-start gap-4 p-5">
                 <Avatar src={r.reported.photos[0]} name={r.reported.name} size="h-12 w-12" />
@@ -139,7 +141,7 @@ export default async function Admin() {
             ))}
           </Panel>
 
-          <Panel title="New photos this week" count={newPhotos.length} empty="No new photos to check.">
+          <Panel icon="images" title="New photos this week" count={newPhotos.length} empty="No new photos to check.">
             {newPhotos.map((u) => (
               <div key={u.id} className="flex items-center gap-4 p-5">
                 <div className="min-w-0 flex-1">
@@ -153,7 +155,7 @@ export default async function Admin() {
             ))}
           </Panel>
 
-          <Panel title="Recent errors" count={errors.length} empty="Nothing has gone wrong.">
+          <Panel icon="warning" title="Recent errors" count={errors.length} empty="Nothing has gone wrong.">
             {errors.map((e) => (
               <div key={e.id} className="p-5">
                 <div className="mb-1.5 flex flex-wrap items-center gap-2 text-xs">
@@ -168,7 +170,7 @@ export default async function Admin() {
         </div>
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-[#EDE6F0] bg-white">
-          <PanelHead title="Newest users" count={users.length} />
+          <PanelHead icon="people" title="Newest users" count={users.length} />
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8A8090]">
@@ -220,9 +222,12 @@ export default async function Admin() {
   );
 }
 
-function PanelHead({ title, count }: { title: string; count: number }) {
+function PanelHead({ icon, title, count }: { icon: IconName; title: string; count: number }) {
   return (
     <div className="flex items-center gap-2.5 border-b border-[#F1ECF4] px-5 py-4">
+      <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#F3EEF6] text-[#140A18]">
+        <Icon name={icon} className="h-4 w-4" />
+      </span>
       <h2 className="font-bold">{title}</h2>
       <span className={`rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${count ? "bg-[#FF2D6F] text-white" : "bg-[#F3EEF6] text-[#8A8090]"}`}>
         {count}
@@ -231,10 +236,10 @@ function PanelHead({ title, count }: { title: string; count: number }) {
   );
 }
 
-function Panel({ title, count, empty, children }: { title: string; count: number; empty: string; children: React.ReactNode }) {
+function Panel({ icon, title, count, empty, children }: { icon: IconName; title: string; count: number; empty: string; children: React.ReactNode }) {
   return (
     <section className="flex max-h-[34rem] flex-col overflow-hidden rounded-2xl border border-[#EDE6F0] bg-white">
-      <PanelHead title={title} count={count} />
+      <PanelHead icon={icon} title={title} count={count} />
       {count === 0 ? (
         <p className="px-5 py-10 text-center text-sm text-[#A39AA8]">{empty}</p>
       ) : (
@@ -252,8 +257,8 @@ function Avatar({ src, name, size }: { src?: string | null; name: string | null;
   return src ? (
     <img src={src} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
   ) : (
-    <span className={`${size} grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#FF2D6F] to-[#7B2FF7] text-xs font-bold text-white`}>
-      {(name ?? "?").trim().charAt(0).toUpperCase()}
+    <span className={`${size} grid shrink-0 place-items-center rounded-full bg-gradient-to-b from-[#A5ABB8] to-[#858994] text-[13px] font-semibold tracking-wide text-white`}>
+      {initials(name) || <Icon name="person" className="h-1/2 w-1/2" />}
     </span>
   );
 }

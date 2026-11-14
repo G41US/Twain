@@ -15,9 +15,9 @@ export default function TabsLayout() {
         tabBarStyle: { borderTopColor: colors.line, backgroundColor: colors.white, height: 62 + insets.bottom, paddingTop: 6, paddingBottom: insets.bottom + 6 },
       }}
     >
-      <Tabs.Screen name="discover" options={{ title: "Discover", tabBarIcon: ({ color, size }) => <Ionicons name="flame" color={color as string} size={size} /> }} />
-      <Tabs.Screen name="matches" options={{ title: "Matches", tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" color={color as string} size={size} /> }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color as string} size={size} /> }} />
+      <Tabs.Screen name="discover" options={{ title: "Discover", tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? "flame" : "flame-outline"} color={color as string} size={size} /> }} />
+      <Tabs.Screen name="matches" options={{ title: "Matches", tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} color={color as string} size={size} /> }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile", tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? "person-circle" : "person-circle-outline"} color={color as string} size={size} /> }} />
     </Tabs>
   );
 }

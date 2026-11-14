@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import {
@@ -124,13 +125,47 @@ export function Card({ children, style, tint }: { children: ReactNode; style?: S
   return <View style={[styles.card, tint ? { backgroundColor: tint, borderColor: "transparent" } : null, style]}>{children}</View>;
 }
 
-export function Notice({ text, tone = "error" }: { text: string; tone?: "error" | "info" | "success" }) {
-  const bg = tone === "error" ? "#FDECEC" : tone === "success" ? "#E8F7EE" : "#EEF2FF";
-  const fg = tone === "error" ? "#9B1C1C" : tone === "success" ? "#14532D" : "#1E3A8A";
+type IconName = keyof typeof Ionicons.glyphMap;
+const TONES = {
+  error: { bg: "#FDECEC", fg: "#9B1C1C", icon: "alert-circle" },
+  success: { bg: "#E8F7EE", fg: "#14532D", icon: "checkmark-circle" },
+  info: { bg: "#EEF2FF", fg: "#1E3A8A", icon: "information-circle" },
+  warn: { bg: "#FEF9C3", fg: "#713F12", icon: "shield-checkmark" },
+} as const;
+
+export function Notice({ text, tone = "error", icon }: { text: string; tone?: keyof typeof TONES; icon?: IconName }) {
+  const t = TONES[tone];
   return (
-    <View accessibilityRole="alert" style={{ backgroundColor: bg, borderRadius: 14, padding: 12 }}>
-      <Text style={{ color: fg, fontFamily: font.medium, fontSize: 14 }}>{text}</Text>
+    <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: t.bg }]}>
+      <Ionicons name={icon ?? t.icon} size={18} color={t.fg} />
+      <Text style={{ flex: 1, color: t.fg, fontFamily: font.medium, fontSize: 14, lineHeight: 20 }}>{text}</Text>
     </View>
+  );
+}
+
+/** One line of copy led by an SF-style glyph. */
+export function IconLine({ icon, color, children }: { icon: IconName; color: string; children: ReactNode }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
+      <Ionicons name={icon} size={20} color={color} style={{ marginTop: 1 }} />
+      <T style={{ flex: 1 }}>{children}</T>
+    </View>
+  );
+}
+
+/** iOS Contacts-style avatar: the photo, or initials on a soft grey gradient. */
+export function Avatar({ uri, name, size }: { uri?: string | null; name?: string | null; size: number }) {
+  const round = { width: size, height: size, borderRadius: size / 2 };
+  if (uri) return <Image source={uri} style={[round, { backgroundColor: "#D1D1D6" }]} contentFit="cover" />;
+  const initials = (name ?? "").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+  return (
+    <LinearGradient colors={["#A5ABB8", "#858994"]} style={[round, { alignItems: "center", justifyContent: "center" }]}>
+      {initials ? (
+        <Text style={{ color: colors.white, fontFamily: font.semibold, fontSize: size * 0.4, letterSpacing: 0.3 }}>{initials}</Text>
+      ) : (
+        <Ionicons name="person" size={size * 0.55} color={colors.white} />
+      )}
+    </LinearGradient>
   );
 }
 
@@ -153,5 +188,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white },
   chipText: { fontFamily: font.semibold, fontSize: 14, color: colors.ink },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, padding: 12 },
   card: { backgroundColor: colors.card, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: colors.line, gap: 10 },
 });

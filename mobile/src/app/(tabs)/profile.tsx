@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
@@ -9,7 +8,7 @@ import {
   AboutSection, formFrom, PhotosSection, PreferencesSection, saveSteps, VibesSection, VoiceSection, WhereSection,
   type Form, type Step,
 } from "../../components/profile-form";
-import { Button, Card, Notice, Screen, T } from "../../components/ui";
+import { Avatar, Button, Card, Notice, Screen, T } from "../../components/ui";
 import { useProfile, type Me } from "../../ctx/profile";
 import { useSession } from "../../ctx/session";
 import { api, mimeFor, uploadFile } from "../../lib/api";
@@ -75,11 +74,7 @@ export default function Profile() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.head}>
           <View style={styles.avatarRing}>
-            {photo ? (
-              <Image source={photo} style={styles.avatarWrap} contentFit="cover" />
-            ) : (
-              <Ionicons name="person" size={44} color="#C9C0CE" />
-            )}
+            <Avatar uri={photo} name={me.name} size={96} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <T variant="title">{me.name || "You"}{form.age ? `, ${form.age}` : ""}</T>
@@ -109,7 +104,7 @@ export default function Profile() {
         </View>
 
         {error ? <Notice text={error} /> : null}
-        {saved ? <Notice text="Saved ✓" tone="success" /> : null}
+        {saved ? <Notice text="Saved" tone="success" /> : null}
         {dirty ? <Button title="Save changes" icon="checkmark" loading={saving} onPress={save} /> : null}
 
         <NotificationsCard />
@@ -137,7 +132,7 @@ function Verification({ me, onDone }: { me: Me; onDone: () => Promise<unknown> }
   const [busy, setBusy] = useState(false);
 
   if (me.selfieStatus === "pending") {
-    return <Notice tone="info" text="⏳ Your verification selfie is being reviewed." />;
+    return <Notice tone="info" icon="time" text="Your verification selfie is being reviewed." />;
   }
 
   const getPose = async () => {
@@ -198,7 +193,6 @@ const styles = StyleSheet.create({
     width: 112, height: 112, borderRadius: 56, borderWidth: 3, borderColor: colors.brand, padding: 4,
     alignItems: "center", justifyContent: "center", backgroundColor: colors.white, marginBottom: 6,
   },
-  avatarWrap: { width: "100%", height: "100%", borderRadius: 52, overflow: "hidden" },
   sectionHead: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   sectionIcon: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#FFE4EC", alignItems: "center", justifyContent: "center" },
   sectionTitle: { flex: 1, fontFamily: font.semibold, fontSize: 16, color: colors.ink },

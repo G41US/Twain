@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Icon, { type IconName } from "./Icon";
 
-const tabs = [
-  { href: "/swipe", label: "Swipe", icon: "🔥" },
-  { href: "/matches", label: "Matches", icon: "💬" },
-  { href: "/profile", label: "Profile", icon: "👤" },
+const tabs: { href: string; label: string; icon: IconName }[] = [
+  { href: "/swipe", label: "Swipe", icon: "flame" },
+  { href: "/matches", label: "Matches", icon: "chatbubbles" },
+  { href: "/profile", label: "Profile", icon: "person-circle" },
 ];
 
 export default function BottomNav() {
@@ -30,7 +31,7 @@ export default function BottomNav() {
                   aria-current={active ? "page" : undefined}
                   className={`flex h-full flex-col items-center justify-center text-xs ${active ? "font-semibold text-primary" : "text-gray-500"}`}
                 >
-                  <span className="text-xl" aria-hidden>{t.icon}</span>
+                  <Icon name={active ? t.icon : (`${t.icon}-outline` as IconName)} className="mb-0.5 h-6 w-6" />
                   {t.label}
                 </Link>
               </li>
