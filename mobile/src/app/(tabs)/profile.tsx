@@ -161,7 +161,7 @@ function EditSheet({ title, visible, onCancel, onSave, saving, children }: {
             ) : null}
           </View>
         </View>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={[styles.sheetBody, { paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { NotificationsCard } from "../components/notifications-card";
 import {
@@ -55,7 +55,7 @@ export default function Setup() {
 
   return (
     <Screen edges={["top", "bottom"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.progress} accessibilityLabel={`Step ${step + 1} of ${STEPS.length}`}>
           {STEPS.map((s, i) => <View key={s} style={[styles.bar, i <= step && { backgroundColor: colors.brand }]} />)}
         </View>

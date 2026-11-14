@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -121,7 +121,7 @@ export default function Chat() {
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }} keyboardVerticalOffset={insets.top + 60}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           ref={scroll}
           contentContainerStyle={styles.messages}

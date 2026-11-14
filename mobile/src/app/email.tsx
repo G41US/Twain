@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, StyleSheet, TextInput, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { Button, Field, Notice, Screen, T } from "../components/ui";
 import { supabase } from "../lib/supabase";
@@ -59,7 +59,7 @@ export default function EmailSignIn() {
 
   return (
     <Screen edges={["top", "bottom"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.wrap}>
           <Pressable
             onPress={() => (step === "code" ? (setStep("email"), setCode(""), setError("")) : router.back())}

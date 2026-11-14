@@ -3,7 +3,7 @@
     "name": "Twain",
     "slug": "twain",
     "scheme": "twain",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,14 +14,13 @@
     },
     "android": {
       "package": "com.g41us.twain",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "backgroundColor": "#B42EB3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
         "android.permission.ACCESS_BACKGROUND_LOCATION"
