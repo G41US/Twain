@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button, Screen, T } from "../components/ui";
+import { UpdatePrompt } from "../components/update-prompt";
 import { isComplete, ProfileProvider, useProfile } from "../ctx/profile";
 import { SessionProvider, useSession } from "../ctx/session";
 import { colors } from "../lib/theme";
@@ -69,6 +70,7 @@ function Navigator({ fontsLoaded }: { fontsLoaded: boolean }) {
   return (
     <>
       <StatusBar style="dark" />
+      <UpdatePrompt />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="index" />
         <Stack.Protected guard={!session} redirectTo="/">
