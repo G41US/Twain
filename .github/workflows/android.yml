@@ -63,6 +63,10 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleRelease bundleRelease --no-daemon
 
+      # The in-app update prompt downloads releases/latest/download/Twain.apk.
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/Twain.apk
+
       - name: Publish release (download the APK on your phone from the Releases page)
         if: env.ANDROID_KEYSTORE_PATH != ''
         uses: softprops/action-gh-release@v2
@@ -70,7 +74,7 @@ jobs:
           tag_name: app-v1.0.${{ github.run_number }}
           name: Twain 1.0.${{ github.run_number }}
           files: |
-            mobile/android/app/build/outputs/apk/release/app-release.apk
+            mobile/android/app/build/outputs/apk/release/Twain.apk
             mobile/android/app/build/outputs/bundle/release/app-release.aab
 
       - uses: actions/upload-artifact@v4
