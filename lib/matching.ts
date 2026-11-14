@@ -62,3 +62,41 @@ export function dealbreakersOk(
 ): boolean {
   return !a.dealbreakers.some((d) => b.traits.includes(d)) && !b.dealbreakers.some((d) => a.traits.includes(d));
 }
+
+type Seeker = {
+  id: string; gender: string | null; lookingFor: string | null; age: number; ageMin: number; ageMax: number;
+  latitude: number; longitude: number; maxDistanceKm: number; preferEthnicity: string | null;
+};
+
+/**
+ * Prisma `where` for Discover: people `me` may be shown. Safety rules live here (tested in safety.test.ts):
+ * never yourself or banned/unfinished profiles, both people fit each other's gender and age wishes,
+ * nobody already liked or passed, and no block in either direction.
+ */
+export function candidateWhere(me: Seeker) {
+  return {
+    id: { not: me.id },
+    banned: false,
+    acceptedTermsAt: { not: null },
+    photos: { isEmpty: false },
+    ...genderFilter(me),
+    ...boundingBox(me.latitude, me.longitude, me.maxDistanceKm),
+    age: { gte: me.ageMin, lte: me.ageMax },
+    ageMin: { lte: me.age },
+    ageMax: { gte: me.age },
+    likesReceived: { none: { likerId: me.id } },
+    passesReceived: { none: { passerId: me.id } },
+    blocksMade: { none: { blockedId: me.id } },
+    blocksReceived: { none: { blockerId: me.id } },
+    ...(me.preferEthnicity && me.preferEthnicity !== "all" && { ethnicity: me.preferEthnicity }),
+  };
+}
+
+/** Second pass after the query: within both people's distance limits, and no dealbreakers either way. */
+export function fitsBothWays(
+  me: { maxDistanceKm: number; traits: string[]; dealbreakers: string[] },
+  them: { maxDistanceKm: number; traits: string[]; dealbreakers: string[] },
+  km: number,
+): boolean {
+  return km <= me.maxDistanceKm && km <= them.maxDistanceKm && dealbreakersOk(me, them);
+}

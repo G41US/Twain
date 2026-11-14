@@ -9,7 +9,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Me } from "../ctx/profile";
-import { api, mimeFor, uploadFile } from "../lib/api";
+import { api, ApiError, mimeFor, uploadFile } from "../lib/api";
 import { API_URL } from "../lib/config";
 import { CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, LOOKING_FOR, slug, TRAITS, VIBE_QUESTIONS } from "../lib/options";
 import { colors, font, tile } from "../lib/theme";
@@ -73,8 +73,10 @@ export async function saveSteps(form: Form, steps: readonly Step[]): Promise<str
   try {
     await api("/api/profile", { body });
     return "";
-  } catch {
-    return "Couldn't save — check your connection and try again.";
+  } catch (e) {
+    // Plain-text 400s are written for people (e.g. "That photo looks explicit…"); show them as-is.
+    if (e instanceof ApiError && e.status === 400 && !e.message.startsWith("{")) return e.message;
+    return "Couldn't save. Check your connection and try again.";
   }
 }
 

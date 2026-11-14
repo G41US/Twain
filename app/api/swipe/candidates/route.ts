@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { boundingBox, dealbreakersOk, distanceKm, genderFilter, vibeScore } from "@/lib/matching";
+import { candidateWhere, distanceKm, fitsBothWays, vibeScore } from "@/lib/matching";
 
 export async function GET() {
   const me = await getCurrentUser();
@@ -13,27 +13,7 @@ export async function GET() {
   const [lat, lng] = [me.latitude, me.longitude];
 
   const rows = await prisma.user.findMany({
-    where: {
-      id: { not: me.id },
-      banned: false,
-      acceptedTermsAt: { not: null },
-      photos: { isEmpty: false },
-      ...genderFilter(me),
-      ...boundingBox(lat, lng, me.maxDistanceKm),
-
-      // Age range, both ways: they're in my range and I'm in theirs.
-      age: { gte: me.ageMin, lte: me.ageMax },
-      ageMin: { lte: myAge },
-      ageMax: { gte: myAge },
-
-      // Skip people I've liked or passed, and anyone blocked in either direction.
-      likesReceived: { none: { likerId: me.id } },
-      passesReceived: { none: { passerId: me.id } },
-      blocksMade: { none: { blockedId: me.id } },
-      blocksReceived: { none: { blockerId: me.id } },
-
-      ...(me.preferEthnicity && me.preferEthnicity !== "all" && { ethnicity: me.preferEthnicity }),
-    },
+    where: candidateWhere({ ...me, age: myAge, latitude: lat, longitude: lng }),
     select: {
       id: true, name: true, age: true, bio: true, photos: true, voiceIntroUrl: true, replyRate: true,
       verified: true, vibeAnswers: true, traits: true, dealbreakers: true, latitude: true, longitude: true,
@@ -46,7 +26,7 @@ export async function GET() {
   // shortcut: filters up to 200 nearby rows in memory; move distance into SQL (PostGIS) past ~10k users.
   const candidates = rows
     .map((c) => ({ ...c, km: distanceKm(lat, lng, c.latitude!, c.longitude!) }))
-    .filter((c) => c.km <= me.maxDistanceKm && c.km <= c.maxDistanceKm && dealbreakersOk(me, c))
+    .filter((c) => fitsBothWays(me, c, c.km))
     .slice(0, 50)
     .map(({ vibeAnswers, latitude, longitude, traits, dealbreakers, maxDistanceKm, km, ...c }) => ({
       ...c,

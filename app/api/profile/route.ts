@@ -1,43 +1,10 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { BUCKET, SUPABASE_URL } from "@/lib/supabase";
-import { DISTANCES, TRAIT_VALUES, VIBE_QUESTIONS } from "@/lib/options";
 import { roundCoord } from "@/lib/matching";
-import { z } from "zod";
+import { photoIsExplicit } from "@/lib/moderation";
+import { OUR_MEDIA, profileInput } from "@/lib/profile-input";
 
-const OUR_MEDIA = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
-// Files we host that this user uploaded (paths are "<kind>/<userId>/<uuid>.<ext>"), or ones already on their profile.
-const ownMedia = (me: { id: string; photos: string[]; voiceIntroUrl: string | null }) =>
-  z.string().url().refine((u) =>
-    u.startsWith(`${OUR_MEDIA}photo/${me.id}/`) || u.startsWith(`${OUR_MEDIA}voice/${me.id}/`) ||
-    me.photos.includes(u) || u === me.voiceIntroUrl);
-const trait = z.enum(TRAIT_VALUES as [string, ...string[]]);
-
-// Only these fields can be set by the user; anything else (isAdmin, verified, replyRate...) is rejected.
-const profileInput = (me: Parameters<typeof ownMedia>[0]) =>
-  z
-    .object({
-      bio: z.string().trim().max(500),
-      age: z.number().int().min(18).max(100),
-      gender: z.enum(["Male", "Female", "Non-binary", "Other"]),
-      lookingFor: z.enum(["Men", "Women", "Everyone"]),
-      ethnicity: z.string().max(50).nullable(),
-      preferEthnicity: z.string().max(50),
-      sensitiveConsent: z.boolean(),
-      photos: z.array(ownMedia(me)).max(6),
-      voiceIntroUrl: z.union([ownMedia(me), z.literal("")]),
-      vibeAnswers: z.record(z.enum(VIBE_QUESTIONS), z.boolean()),
-      traits: z.array(trait).max(10),
-      dealbreakers: z.array(trait).max(10),
-      latitude: z.number().min(-90).max(90),
-      longitude: z.number().min(-180).max(180),
-      maxDistanceKm: z.number().refine((n) => (DISTANCES as readonly number[]).includes(n)),
-      ageMin: z.number().int().min(18).max(100),
-      ageMax: z.number().int().min(18).max(100),
-      acceptTerms: z.literal(true),
-    })
-    .partial()
-    .strict();
+export const maxDuration = 60; // room for the photo check on a cold start
 
 export async function GET() {
   const me = await getCurrentUser();
@@ -62,6 +29,15 @@ export async function POST(req: Request) {
     return new Response("Tick the consent box to save your ethnicity", { status: 400 });
   }
 
+  // Every new photo is checked here, whichever app uploaded it. Rejected files are queued for deletion.
+  const added = data.photos?.filter((p) => !me.photos.includes(p)) ?? [];
+  const verdicts = await Promise.all(added.map((u) => photoIsExplicit(u, new URL(req.url).origin)));
+  const explicit = added.filter((_, i) => verdicts[i] === true);
+  if (explicit.length) {
+    await prisma.mediaDeletion.createMany({ data: explicit.map((u) => ({ path: u.slice(OUR_MEDIA.length) })), skipDuplicates: true });
+    return new Response("That photo looks explicit, so it can't be used. Pick another one.", { status: 400 });
+  }
+
   const removed = data.photos ? me.photos.filter((p) => !data.photos!.includes(p)) : [];
   if (data.voiceIntroUrl !== undefined && me.voiceIntroUrl && me.voiceIntroUrl !== data.voiceIntroUrl) removed.push(me.voiceIntroUrl);
 
@@ -74,6 +50,7 @@ export async function POST(req: Request) {
         ...(acceptTerms && !me.acceptedTermsAt && { acceptedTermsAt: new Date() }),
         ...(sensitiveConsent && !me.sensitiveConsentAt && { sensitiveConsentAt: new Date() }),
         ...(data.photos && data.photos.join() !== me.photos.join() && { photosUpdatedAt: new Date() }),
+        ...(data.voiceIntroUrl && data.voiceIntroUrl !== me.voiceIntroUrl && { voiceUpdatedAt: new Date() }),
       },
     }),
     // Files the user removed get deleted from storage by the purge-media job.

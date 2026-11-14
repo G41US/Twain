@@ -32,7 +32,7 @@ export default async function Admin() {
 
   const dayAgo = new Date(Date.now() - 24 * 3600_000);
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600_000);
-  const [total, activeToday, newThisWeek, matches, messagesToday, avg, reports, pending, newPhotos, errors, users] = await Promise.all([
+  const [total, activeToday, newThisWeek, matches, messagesToday, avg, reports, pending, newPhotos, newVoices, errors, users] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { lastActiveAt: { gte: dayAgo } } }),
     prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
@@ -56,6 +56,12 @@ export default async function Admin() {
       where: { photosUpdatedAt: { gte: weekAgo } },
       orderBy: { photosUpdatedAt: "desc" },
       select: { id: true, name: true, email: true, photos: true, banned: true },
+      take: 30,
+    }),
+    prisma.user.findMany({
+      where: { voiceUpdatedAt: { gte: weekAgo }, voiceIntroUrl: { not: null } },
+      orderBy: { voiceUpdatedAt: "desc" },
+      select: { id: true, name: true, email: true, photos: true, image: true, voiceIntroUrl: true, banned: true, voiceUpdatedAt: true },
       take: 30,
     }),
     prisma.errorLog.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
@@ -149,6 +155,20 @@ export default async function Admin() {
                   <div className="flex gap-2 overflow-x-auto">
                     {u.photos.map((p) => <img key={p} src={p} alt={`${u.name}'s photo`} className="h-24 w-[4.5rem] shrink-0 rounded-lg object-cover" />)}
                   </div>
+                </div>
+                {u.id !== me.id && <BanButton userId={u.id} banned={u.banned} />}
+              </div>
+            ))}
+          </Panel>
+
+          <Panel icon="mic" title="New voice intros this week" count={newVoices.length} empty="No new voice intros to check.">
+            {newVoices.map((u) => (
+              <div key={u.id} className="flex items-center gap-4 p-5">
+                <Avatar src={u.photos[0] ?? u.image} name={u.name} size="h-10 w-10" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{u.name ?? "Unnamed"}</p>
+                  <p className="mb-2 text-xs text-[#A39AA8]">{u.voiceUpdatedAt ? when(u.voiceUpdatedAt) : ""}</p>
+                  <audio controls preload="none" src={u.voiceIntroUrl!} className="h-9 w-full" />
                 </div>
                 {u.id !== me.id && <BanButton userId={u.id} banned={u.banned} />}
               </div>

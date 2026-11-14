@@ -1,6 +1,8 @@
 // On-device explicit-photo check before upload. Loaded only when someone picks a photo (~4MB, cached after).
 // Reports + admin photo review catch anything this misses; it's the first line, not the only one.
 
+import { isExplicit } from "./explicit";
+
 let modelPromise: Promise<{ classify: (img: HTMLImageElement) => Promise<{ className: string; probability: number }[]> }> | null = null;
 
 async function model() {
@@ -16,10 +18,7 @@ export async function looksExplicit(file: File): Promise<boolean> {
     const img = new Image();
     img.src = url;
     await img.decode();
-    const predictions = await (await model()).classify(img);
-    const p = (name: string) => predictions.find((x) => x.className === name)?.probability ?? 0;
-    // "Sexy" (swimwear, gym photos) is allowed; only clear porn/hentai is blocked.
-    return p("Porn") + p("Hentai") > 0.7;
+    return isExplicit(await (await model()).classify(img));
   } catch {
     return false;
   } finally {

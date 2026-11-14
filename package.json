@@ -9,7 +9,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "test": "node --test lib/*.test.ts",
+    "test": "tsx --test lib/*.test.ts",
     "seed": "node --env-file-if-exists=.env prisma/seed.mjs"
   },
   "dependencies": {
@@ -35,6 +35,7 @@
     "@types/web-push": "^3.6.4",
     "prisma": "^5.20.0",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.5.4"
   }
 }

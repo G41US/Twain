@@ -55,6 +55,7 @@ model User {
   selfiePose      String?   @db.VarChar(100)
   selfieStatus    String?   @db.VarChar(20) // pending | rejected
   photosUpdatedAt DateTime?
+  voiceUpdatedAt  DateTime? // admin reviews new voice intros
   replyRate       Float?    // null until someone has messaged them
   isAdmin         Boolean   @default(false)
   banned          Boolean   @default(false)

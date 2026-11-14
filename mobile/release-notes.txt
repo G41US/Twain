@@ -1,1 +1,1 @@
-In-app updates: download and install without leaving Twain.
+Clearer messages when a photo can't be used, plus safety improvements.
