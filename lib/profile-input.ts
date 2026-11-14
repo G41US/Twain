@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DISTANCES, TRAIT_VALUES, VIBE_QUESTIONS } from "./options";
+import { DISTANCES, INTENTION_VALUES, MAX_PROMPTS, PROMPT_MAX_CHARS, PROMPTS, TRAIT_VALUES, VIBE_QUESTIONS } from "./options";
 import { BUCKET, SUPABASE_URL } from "./supabase";
 
 // What a user may change on their own profile. Kept out of the route so the rules are unit-tested (safety.test.ts).
@@ -32,6 +32,11 @@ export const profileInput = (me: Me) =>
       maxDistanceKm: z.number().refine((n) => (DISTANCES as readonly number[]).includes(n)),
       ageMin: z.number().int().min(18).max(100),
       ageMax: z.number().int().min(18).max(100),
+      intention: z.enum(INTENTION_VALUES as [string, ...string[]]),
+      prompts: z
+        .array(z.object({ q: z.enum(PROMPTS as [string, ...string[]]), a: z.string().trim().min(1).max(PROMPT_MAX_CHARS) }).strict())
+        .max(MAX_PROMPTS)
+        .refine((ps) => new Set(ps.map((p) => p.q)).size === ps.length, "Each prompt can only be used once"),
       acceptTerms: z.literal(true),
     })
     .partial()

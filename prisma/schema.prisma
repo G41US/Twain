@@ -56,6 +56,8 @@ model User {
   selfieStatus    String?   @db.VarChar(20) // pending | rejected
   photosUpdatedAt DateTime?
   voiceUpdatedAt  DateTime? // admin reviews new voice intros
+  intention       String? // serious | casual | exploring | open
+  prompts         Json     @default("[]") // [{ q, a }], up to 3
   replyRate       Float?    // null until someone has messaged them
   isAdmin         Boolean   @default(false)
   banned          Boolean   @default(false)

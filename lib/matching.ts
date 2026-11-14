@@ -100,3 +100,10 @@ export function fitsBothWays(
 ): boolean {
   return km <= me.maxDistanceKm && km <= them.maxDistanceKm && dealbreakersOk(me, them);
 }
+
+/** How well two people's reasons for being here fit: 2 same, 1 compatible or unknown, 0 serious vs casual. */
+export function intentionFit(a: string | null | undefined, b: string | null | undefined): number {
+  if (!a || !b) return 1;
+  if (a === b) return 2;
+  return a === "exploring" || a === "open" || b === "exploring" || b === "open" ? 1 : 0;
+}

@@ -1,1 +1,1 @@
-Clearer messages when a photo can't be used, plus safety improvements.
+Say what you're here for, answer profile prompts, pick your wingman's style, and first-date safety tips.

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { candidateWhere, distanceKm, fitsBothWays, vibeScore } from "@/lib/matching";
+import { candidateWhere, distanceKm, fitsBothWays, intentionFit, vibeScore } from "@/lib/matching";
 
 export async function GET() {
   const me = await getCurrentUser();
@@ -17,7 +17,7 @@ export async function GET() {
     select: {
       id: true, name: true, age: true, bio: true, photos: true, voiceIntroUrl: true, replyRate: true,
       verified: true, vibeAnswers: true, traits: true, dealbreakers: true, latitude: true, longitude: true,
-      maxDistanceKm: true,
+      maxDistanceKm: true, intention: true, prompts: true,
     },
     orderBy: { lastActiveAt: { sort: "desc", nulls: "last" } },
     take: 200,
@@ -27,6 +27,8 @@ export async function GET() {
   const candidates = rows
     .map((c) => ({ ...c, km: distanceKm(lat, lng, c.latitude!, c.longitude!) }))
     .filter((c) => fitsBothWays(me, c, c.km))
+    // People who want what you want first; otherwise keep most-recently-active order (sort is stable).
+    .sort((a, b) => intentionFit(me.intention, b.intention) - intentionFit(me.intention, a.intention))
     .slice(0, 50)
     .map(({ vibeAnswers, latitude, longitude, traits, dealbreakers, maxDistanceKm, km, ...c }) => ({
       ...c,

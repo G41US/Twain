@@ -6,14 +6,18 @@ import {
 } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DateSafetySheet } from "../../components/date-safety-sheet";
 import { ReportSheet } from "../../components/report-sheet";
 import { Avatar, Button, Screen, T } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { ask, tell } from "../../lib/dialog";
+import { WINGMAN_STYLES } from "../../lib/options";
 import { colors, font } from "../../lib/theme";
 
 type Message = { id: string; senderId: string; body: string; createdAt: string };
 type Other = { id: string; name: string | null; photos: string[]; image: string | null; verified: boolean };
+
+const STYLE_HINTS = { natural: "Relaxed and warm", witty: "Playful", direct: "Says what you mean", romantic: "Sweet, not cheesy" } as const;
 
 // shortcut: polls every 3s; switch to Supabase Realtime if chats get busy.
 const POLL_MS = 3000;
@@ -30,6 +34,8 @@ export default function Chat() {
   const [menu, setMenu] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [gone, setGone] = useState(false);
+  const [stylePicker, setStylePicker] = useState(false);
+  const [dateTips, setDateTips] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
 
   const load = useCallback(async () => {
@@ -63,10 +69,11 @@ export default function Chat() {
     setSending(false);
   };
 
-  const wingman = async () => {
+  const wingman = async (style: (typeof WINGMAN_STYLES)[number]) => {
+    setStylePicker(false);
     setThinking(true);
     try {
-      const data = await api<{ reply?: string; error?: string }>("/api/wingman", { body: { matchId: id } });
+      const data = await api<{ reply?: string; error?: string }>("/api/wingman", { body: { matchId: id, style } });
       if (data.reply) setInput(data.reply);
     } catch (e) {
       tell("Wingman is resting", e instanceof ApiError && e.status === 503 ? "The AI wingman isn't switched on yet." : "Try again in a moment.");
@@ -140,7 +147,7 @@ export default function Chat() {
         </ScrollView>
 
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-          <Pressable onPress={wingman} disabled={thinking} accessibilityRole="button" accessibilityLabel="AI wingman suggestion" style={styles.wingman}>
+          <Pressable onPress={() => setStylePicker(true)} disabled={thinking} accessibilityRole="button" accessibilityLabel="Suggest a message" style={styles.wingman}>
             {thinking ? <ActivityIndicator color={colors.violet} /> : <Ionicons name="sparkles" size={21} color={colors.violet} />}
           </Pressable>
           <TextInput
@@ -163,6 +170,10 @@ export default function Chat() {
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)}>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenu(false)}>
           <View style={[styles.menu, { top: insets.top + 56 }]}>
+            <Pressable onPress={() => { setMenu(false); setDateTips(true); }} accessibilityRole="button"
+              style={({ pressed }) => [styles.menuItem, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline }, pressed && { backgroundColor: colors.bg }]}>
+              <Text style={styles.menuText}>Planning to meet?</Text><Ionicons name="calendar-outline" size={19} color={colors.ink} />
+            </Pressable>
             <Pressable onPress={() => { setMenu(false); setReporting(true); }} accessibilityRole="button"
               style={({ pressed }) => [styles.menuItem, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline }, pressed && { backgroundColor: colors.bg }]}>
               <Text style={styles.menuText}>Report</Text><Ionicons name="flag-outline" size={19} color={colors.ink} />
@@ -174,6 +185,22 @@ export default function Chat() {
         </Pressable>
       </Modal>
 
+      <Modal visible={stylePicker} transparent animationType="fade" onRequestClose={() => setStylePicker(false)}>
+        <Pressable style={styles.menuBackdrop} onPress={() => setStylePicker(false)}>
+          <View style={[styles.menu, { top: undefined, right: undefined, left: 10, bottom: insets.bottom + 60 }]}>
+            <Text style={styles.menuHeader}>Suggest a message that&apos;s…</Text>
+            {WINGMAN_STYLES.map((st, i) => (
+              <Pressable key={st} onPress={() => wingman(st)} accessibilityRole="button"
+                style={({ pressed }) => [styles.menuItem, i < WINGMAN_STYLES.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline }, pressed && { backgroundColor: colors.bg }]}>
+                <Text style={styles.menuText}>{st[0].toUpperCase() + st.slice(1)}</Text>
+                <Text style={styles.menuHint}>{STYLE_HINTS[st]}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
+      <DateSafetySheet name={other?.name ?? "them"} visible={dateTips} onClose={() => setDateTips(false)} />
       <ReportSheet target={reporting && other ? other : null} onDone={() => setReporting(false)} />
     </Screen>
   );
@@ -213,4 +240,6 @@ const styles = StyleSheet.create({
   },
   menuItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16, paddingVertical: 13 },
   menuText: { fontFamily: font.regular, fontSize: 16, color: colors.ink },
+  menuHint: { fontFamily: font.regular, fontSize: 13.5, color: colors.muted },
+  menuHeader: { fontFamily: font.medium, fontSize: 12.5, color: colors.muted, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
 });

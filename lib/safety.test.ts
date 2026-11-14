@@ -85,3 +85,17 @@ test("explicit-photo rule blocks porn but allows swimwear", () => {
   assert.equal(isExplicit([{ className: "Sexy", probability: 0.95 }]), false);
   assert.equal(isExplicit([{ className: "Neutral", probability: 0.99 }]), false);
 });
+
+test("prompts: known questions only, short answers, at most 3, no repeats", () => {
+  const schema = profileInput(me);
+  assert.equal(schema.safeParse({ prompts: [{ q: "My ideal weekend", a: "Beach, suya, no phone." }] }).success, true);
+  assert.equal(schema.safeParse({ prompts: [{ q: "Send me your bank details", a: "x" }] }).success, false);
+  assert.equal(schema.safeParse({ prompts: [{ q: "My ideal weekend", a: "x".repeat(151) }] }).success, false);
+  assert.equal(schema.safeParse({ prompts: [{ q: "My ideal weekend", a: "   " }] }).success, false);
+  const twice = [{ q: "My ideal weekend", a: "a" }, { q: "My ideal weekend", a: "b" }];
+  assert.equal(schema.safeParse({ prompts: twice }).success, false);
+  const four = ["My simple pleasure", "We'll get along if", "A perfect first date", "My ideal weekend"].map((q) => ({ q, a: "yes" }));
+  assert.equal(schema.safeParse({ prompts: four }).success, false);
+  assert.equal(schema.safeParse({ intention: "hookups-only" }).success, false);
+  assert.equal(schema.safeParse({ intention: "serious" }).success, true);
+});

@@ -14,6 +14,8 @@ export type Me = {
   preferEthnicity: string | null;
   photos: string[];
   voiceIntroUrl: string | null;
+  intention: string | null;
+  prompts: { q: string; a: string }[] | null;
   vibeAnswers: Record<string, boolean> | null;
   traits: string[];
   dealbreakers: string[];

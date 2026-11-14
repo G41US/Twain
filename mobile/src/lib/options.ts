@@ -66,3 +66,30 @@ export const LOOKING_FOR = [
   { value: "Men", label: "Men" },
   { value: "Everyone", label: "Everyone" },
 ];
+
+// What someone is on Twain for. Shown on their card; Discover favours people who want the same thing.
+export const INTENTIONS = [
+  { value: "serious", label: "A serious relationship", short: "Serious" },
+  { value: "casual", label: "Something casual", short: "Casual" },
+  { value: "exploring", label: "Still figuring it out", short: "Exploring" },
+  { value: "open", label: "Open to see where it goes", short: "Open" },
+] as const;
+export const INTENTION_VALUES: string[] = INTENTIONS.map((i) => i.value);
+
+// Profile prompts: up to 3, each answered in a line or two. Easier to reply to than a bio.
+export const PROMPTS = [
+  "My simple pleasure",
+  "We'll get along if",
+  "A perfect first date",
+  "The quickest way to my heart",
+  "Green flags I look for",
+  "My ideal weekend",
+  "The best jollof in town is",
+  "I'm weirdly good at",
+  "Two truths and a lie",
+  "My unpopular opinion",
+];
+export const MAX_PROMPTS = 3;
+export const PROMPT_MAX_CHARS = 150;
+
+export const WINGMAN_STYLES = ["natural", "witty", "direct", "romantic"] as const;

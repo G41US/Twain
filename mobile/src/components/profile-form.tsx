@@ -11,7 +11,9 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import type { Me } from "../ctx/profile";
 import { api, ApiError, mimeFor, uploadFile } from "../lib/api";
 import { API_URL } from "../lib/config";
-import { CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, LOOKING_FOR, slug, TRAITS, VIBE_QUESTIONS } from "../lib/options";
+import {
+  CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, INTENTIONS, LOOKING_FOR, MAX_PROMPTS, PROMPT_MAX_CHARS, PROMPTS, slug, TRAITS, VIBE_QUESTIONS,
+} from "../lib/options";
 import { colors, font, tile } from "../lib/theme";
 import { Card, Check, Choice, Field, T, IconLine, Notice } from "./ui";
 
@@ -23,6 +25,7 @@ export type Form = {
   latitude: number | null; longitude: number | null; locationLabel: string; maxDistanceKm: number; ageMin: string; ageMax: string;
   voiceIntroUrl: string; vibeAnswers: Record<string, boolean>; traits: string[]; dealbreakers: string[];
   ethnicity: string; preferEthnicity: string; sensitiveConsent: boolean;
+  intention: string; prompts: { q: string; a: string }[];
 };
 
 export const formFrom = (p: Me): Form => ({
@@ -32,6 +35,7 @@ export const formFrom = (p: Me): Form => ({
   ageMin: String(p.ageMin), ageMax: String(p.ageMax), voiceIntroUrl: p.voiceIntroUrl ?? "",
   vibeAnswers: p.vibeAnswers ?? {}, traits: p.traits ?? [], dealbreakers: p.dealbreakers ?? [],
   ethnicity: p.ethnicity ?? "", preferEthnicity: p.preferEthnicity ?? "all", sensitiveConsent: !!p.sensitiveConsentAt,
+  intention: p.intention ?? "", prompts: p.prompts ?? [],
 });
 
 export const STEPS = ["Welcome", "Photos", "About you", "Where & who", "Voice intro", "Vibe check", "Preferences", "Notifications"] as const;
@@ -43,8 +47,13 @@ export const stepRules: Record<Step, { valid: (f: Form) => string; body: (f: For
   Photos: { valid: (f) => (f.photos.length ? "" : "Add at least one photo of yourself."), body: (f) => ({ photos: f.photos }) },
   "About you": {
     valid: (f) => (!f.gender || !f.lookingFor ? "Pick your gender and who you want to see."
-      : !(Number(f.age) >= 18 && Number(f.age) <= 100) ? "Enter your age (18+)." : ""),
-    body: (f) => ({ bio: f.bio.trim(), age: Number(f.age), gender: f.gender, lookingFor: f.lookingFor }),
+      : !(Number(f.age) >= 18 && Number(f.age) <= 100) ? "Enter your age (18+)."
+      : !f.intention ? "Pick what you're here for."
+      : f.prompts.some((p) => !p.a.trim()) ? "Answer your prompt or remove it." : ""),
+    body: (f) => ({
+      bio: f.bio.trim(), age: Number(f.age), gender: f.gender, lookingFor: f.lookingFor,
+      intention: f.intention, prompts: f.prompts.map((p) => ({ q: p.q, a: p.a.trim() })),
+    }),
   },
   "Where & who": {
     valid: (f) => (f.latitude === null ? "Share your location or pick your city."
@@ -117,7 +126,13 @@ export function PhotosSection({ form, set, setError }: SectionProps) {
   };
   return (
     <View style={{ gap: 12 }}>
-      <T variant="small">Clear photos of your face get the most matches. Your first photo is your main one.</T>
+      <Card style={{ gap: 10 }}>
+        <IconLine icon="happy-outline" color={tile.orange}>Lead with a recent, clear photo of just you.</IconLine>
+        <IconLine icon="body-outline" color={tile.blue}>Add one full-body photo.</IconLine>
+        <IconLine icon="football-outline" color={tile.green}>Add one doing something you love. It&apos;s an easy conversation starter.</IconLine>
+        <IconLine icon="sparkles-outline" color={tile.purple}>Skip heavy filters, old photos and group shots where it&apos;s hard to tell who you are.</IconLine>
+      </Card>
+      <T variant="small">Your first photo is your main one.</T>
       <View style={styles.grid}>
         {form.photos.map((url, i) => (
           <View key={url} style={styles.tile}>
@@ -151,8 +166,45 @@ export function AboutSection({ form, set }: SectionProps) {
       <Field label="Age" value={form.age} onChangeText={(v) => set({ age: v.replace(/\D/g, "").slice(0, 3) })} keyboardType="number-pad" placeholder="e.g. 25" />
       <Choice label="I am a" options={GENDERS} value={form.gender} onChange={(v) => set({ gender: v })} />
       <Choice label="Show me" options={LOOKING_FOR} value={form.lookingFor} onChange={(v) => set({ lookingFor: v })} />
+      <Choice label="I'm here for" options={INTENTIONS.map((i) => ({ value: i.value, label: i.label }))} value={form.intention}
+        onChange={(v) => set({ intention: v })} />
+      <PromptsEditor form={form} set={set} />
       <Field label="Bio" value={form.bio} onChangeText={(v) => set({ bio: v })} maxLength={500} multiline
-        placeholder="What you do, what you love, what you're looking for…" />
+        placeholder="What you do, what you love…" />
+    </View>
+  );
+}
+
+/** Up to 3 prompts from a fixed list, each answered in a line or two. */
+function PromptsEditor({ form, set }: Pick<SectionProps, "form" | "set">) {
+  const [picking, setPicking] = useState(false);
+  const unused = PROMPTS.filter((q) => !form.prompts.some((p) => p.q === q));
+  const answer = (i: number, a: string) => set({ prompts: form.prompts.map((p, j) => (j === i ? { ...p, a } : p)) });
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ gap: 2 }}>
+        <T variant="label">Prompts</T>
+        <T variant="small">Pick up to {MAX_PROMPTS}. They give people an easy way to start talking.</T>
+      </View>
+      {form.prompts.map((p, i) => (
+        <Card key={p.q} style={{ gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={styles.promptQ}>{p.q}</Text>
+            <Pressable onPress={() => set({ prompts: form.prompts.filter((_, j) => j !== i) })} hitSlop={10}
+              accessibilityRole="button" accessibilityLabel={`Remove prompt ${p.q}`}>
+              <Ionicons name="close-circle" size={22} color={colors.faint} />
+            </Pressable>
+          </View>
+          <Field value={p.a} onChangeText={(a) => answer(i, a)} maxLength={PROMPT_MAX_CHARS} multiline placeholder="Your answer"
+            style={{ minHeight: 64 }} accessibilityLabel={`Answer for ${p.q}`} />
+        </Card>
+      ))}
+      {form.prompts.length >= MAX_PROMPTS ? null : picking ? (
+        <Choice options={unused.map((q) => ({ value: q, label: q }))} value={null}
+          onChange={(q) => { set({ prompts: [...form.prompts, { q, a: "" }] }); setPicking(false); }} />
+      ) : (
+        <PillButton icon="add" label="Add a prompt" onPress={() => setPicking(true)} color={colors.brand} />
+      )}
     </View>
   );
 }
@@ -341,6 +393,7 @@ export function PillButton({ icon, label, onPress, disabled, color = colors.ink 
 }
 
 const styles = StyleSheet.create({
+  promptQ: { flex: 1, fontFamily: font.semibold, fontSize: 14.5, color: colors.ink },
   link: { color: colors.brand, fontFamily: font.medium, fontSize: 15 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   tile: { width: "31%", aspectRatio: 3 / 4, borderRadius: 12, overflow: "hidden", backgroundColor: colors.line },

@@ -50,3 +50,12 @@ test("dealbreakersOk checks both directions", () => {
   assert.equal(dealbreakersOk(hatesSmoke, smoker), false);
   assert.equal(dealbreakersOk(smoker, easy), true);
 });
+
+test("intentionFit puts same intentions first and keeps serious and casual apart", async () => {
+  const { intentionFit } = await import("./matching.ts");
+  assert.equal(intentionFit("serious", "serious"), 2);
+  assert.equal(intentionFit("serious", "open"), 1);
+  assert.equal(intentionFit("casual", "exploring"), 1);
+  assert.equal(intentionFit(null, "casual"), 1);
+  assert.equal(intentionFit("serious", "casual"), 0);
+});

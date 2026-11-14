@@ -10,11 +10,13 @@ import { Button, Screen, T } from "../../components/ui";
 import { useProfile } from "../../ctx/profile";
 import { api, ApiError } from "../../lib/api";
 import { tell } from "../../lib/dialog";
+import { INTENTIONS } from "../../lib/options";
 import { colors, font } from "../../lib/theme";
 
 type Person = {
   id: string; name: string | null; age: number | null; bio: string | null; photos: string[];
   voiceIntroUrl: string | null; replyRate: number | null; vibe: number | null; verified: boolean; distanceKm: number;
+  intention: string | null; prompts: { q: string; a: string }[] | null;
 };
 
 const SWIPE_OUT = 120; // px of drag that counts as a swipe
@@ -150,10 +152,16 @@ export default function Discover() {
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Ionicons name="location" size={14} color="rgba(255,255,255,0.85)" /><Text style={styles.meta}>{top.distanceKm} km away</Text></View>
                 <View style={styles.tags}>
+                  {intentionOf(top) ? <Tag icon="heart-outline" text={intentionOf(top)!} /> : null}
                   {top.vibe !== null ? <Tag icon="sparkles" text={`${top.vibe}% vibe match`} /> : null}
                   <Tag icon="chatbubble-ellipses" text={top.replyRate === null ? "New here" : `Replies ${Math.round(top.replyRate)}%`} />
                 </View>
-                {top.bio ? <Text style={styles.bio} numberOfLines={3}>{top.bio}</Text> : null}
+                {top.prompts?.[0] ? (
+                  <View style={styles.prompt}>
+                    <Text style={styles.promptQ}>{top.prompts[0].q}</Text>
+                    <Text style={styles.promptA} numberOfLines={3}>{top.prompts[0].a}</Text>
+                  </View>
+                ) : top.bio ? <Text style={styles.bio} numberOfLines={3}>{top.bio}</Text> : null}
                 {top.voiceIntroUrl ? <VoicePlayer key={top.id} url={top.voiceIntroUrl} light /> : null}
               </LinearGradient>
             </Animated.View>
@@ -184,6 +192,8 @@ export default function Discover() {
     </Screen>
   );
 }
+
+const intentionOf = (p: Person) => INTENTIONS.find((i) => i.value === p.intention)?.short;
 
 function Tag({ text, icon }: { text: string; icon?: keyof typeof Ionicons.glyphMap }) {
   return (
@@ -223,6 +233,9 @@ const styles = StyleSheet.create({
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   tag: { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 13, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: "rgba(255,255,255,0.2)" },
   tagText: { color: colors.white, fontFamily: font.semibold, fontSize: 12.5 },
+  prompt: { gap: 2, borderLeftWidth: 2, borderLeftColor: "rgba(255,255,255,0.6)", paddingLeft: 10 },
+  promptQ: { color: "rgba(255,255,255,0.75)", fontFamily: font.medium, fontSize: 13 },
+  promptA: { color: colors.white, fontFamily: font.semibold, fontSize: 17, lineHeight: 22 },
   bio: { color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
   actions: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 36, paddingVertical: 14 },
   round: { backgroundColor: colors.white, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
