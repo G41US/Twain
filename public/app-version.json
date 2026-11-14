@@ -1,7 +1,7 @@
 {
-  "versionCode": 4,
-  "version": "1.0.2",
-  "notes": "Update prompt, so you always have the newest Twain.",
+  "versionCode": 5,
+  "version": "1.0.3",
+  "notes": "A cleaner, more premium look.",
   "url": "https://github.com/G41US/Twain/releases/latest/download/Twain.apk",
   "minVersionCode": 1
 }
