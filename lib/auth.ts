@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
     ...demoLogin,
   ],
   secret: process.env.NEXTAUTH_SECRET,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 90 * 24 * 3600 }, // stay signed in ~3 months; bans are still checked per request
   callbacks: {
     signIn: ({ user }) => !user.banned,
     async jwt({ token, user }) {

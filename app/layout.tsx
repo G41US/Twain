@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Twain",
   description: "Swipe, Match, Connect – The Future of Dating",
+  manifest: "/site.webmanifest", // admin/layout.tsx swaps in the Twain Admin manifest
   appleWebApp: { capable: true, title: "Twain", statusBarStyle: "default" },
 };
 
