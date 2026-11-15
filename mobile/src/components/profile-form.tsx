@@ -14,7 +14,7 @@ import { API_URL } from "../lib/config";
 import {
   CITIES, DEALBREAKERS, DISTANCES, ETHNICITIES, GENDERS, INTENTIONS, LOOKING_FOR, MAX_PROMPTS, PROMPT_MAX_CHARS, PROMPTS, slug, TRAITS, VIBE_QUESTIONS,
 } from "../lib/options";
-import { colors, font, tile } from "../lib/theme";
+import { colors, font } from "../lib/theme";
 import { Card, Check, Choice, Field, T, IconLine, Notice } from "./ui";
 
 export const MAX_PHOTOS = 6;
@@ -96,9 +96,9 @@ export function WelcomeSection({ form, set }: SectionProps) {
     <View style={{ gap: 16 }}>
       <T>Let&apos;s set up your profile. It takes about 2 minutes.</T>
       <Card style={{ gap: 14 }}>
-        <IconLine icon="person-circle" color={tile.blue}>Be yourself: real photos, real age.</IconLine>
-        <IconLine icon="hand-left" color={tile.red}>Never send money to anyone you meet here.</IconLine>
-        <IconLine icon="flag" color={tile.orange}>Report anyone who makes you uncomfortable.</IconLine>
+        <IconLine icon="person-circle" color={colors.brand}>Be yourself: real photos, real age.</IconLine>
+        <IconLine icon="hand-left" color={colors.brand}>Never send money to anyone you meet here.</IconLine>
+        <IconLine icon="flag" color={colors.brand}>Report anyone who makes you uncomfortable.</IconLine>
       </Card>
       <Check checked={form.acceptTerms} onChange={(v) => set({ acceptTerms: v })} label="I'm 18 or older and I agree to the Terms and Privacy Policy." />
       <View style={{ flexDirection: "row", gap: 20 }}>
@@ -127,10 +127,10 @@ export function PhotosSection({ form, set, setError }: SectionProps) {
   return (
     <View style={{ gap: 12 }}>
       <Card style={{ gap: 10 }}>
-        <IconLine icon="happy-outline" color={tile.orange}>Lead with a recent, clear photo of just you.</IconLine>
-        <IconLine icon="body-outline" color={tile.blue}>Add one full-body photo.</IconLine>
-        <IconLine icon="football-outline" color={tile.green}>Add one doing something you love. It&apos;s an easy conversation starter.</IconLine>
-        <IconLine icon="sparkles-outline" color={tile.purple}>Skip heavy filters, old photos and group shots where it&apos;s hard to tell who you are.</IconLine>
+        <IconLine icon="happy-outline" color={colors.brand}>Lead with a recent, clear photo of just you.</IconLine>
+        <IconLine icon="body-outline" color={colors.brand}>Add one full-body photo.</IconLine>
+        <IconLine icon="football-outline" color={colors.brand}>Add one doing something you love. It&apos;s an easy conversation starter.</IconLine>
+        <IconLine icon="sparkles-outline" color={colors.brand}>Skip heavy filters, old photos and group shots where it&apos;s hard to tell who you are.</IconLine>
       </Card>
       <T variant="small">Your first photo is your main one.</T>
       <View style={styles.grid}>
@@ -229,7 +229,7 @@ export function WhereSection({ form, set, setError }: SectionProps) {
     <View style={{ gap: 18 }}>
       <Card>
         <T variant="small">We only store your location to about 1 km, and only show others how far away you are.</T>
-        <PillButton icon="navigate" color={tile.blue} label={locating ? "Finding you…" : "Use my location"} onPress={useGps} disabled={locating} />
+        <PillButton icon="navigate" color={colors.brand} label={locating ? "Finding you…" : "Use my location"} onPress={useGps} disabled={locating} />
         <Text style={styles.link} onPress={() => setShowCities(!showCities)}>
           {showCities ? "Hide cities" : "Or pick your city"}
         </Text>

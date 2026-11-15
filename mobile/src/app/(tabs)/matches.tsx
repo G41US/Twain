@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Avatar, Screen, T } from "../../components/ui";
 import { useWide } from "../../components/web-frame";
 import { Chat } from "../chat/[id]";
@@ -30,6 +30,24 @@ export default function Matches() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  const open = (id: string) => (wide ? router.setParams({ c: id }) : router.push(`/chat/${id}`));
+  const fresh = items?.filter((m) => !m.lastMessage) ?? []; // matched, nobody has said hi yet
+  const chats = items?.filter((m) => m.lastMessage) ?? [];
+  const rail = fresh.length ? (
+    <View>
+      <Text style={styles.section}>New matches</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
+        {fresh.map((m) => (
+          <Pressable key={m.matchId} onPress={() => open(m.matchId)} accessibilityRole="button" accessibilityLabel={`Say hi to ${m.user.name ?? "your match"}`} style={styles.fresh}>
+            <View style={styles.freshRing}><Avatar uri={m.user.photos[0] || m.user.image} name={m.user.name} size={64} /></View>
+            <Text style={styles.freshName} numberOfLines={1}>{m.user.name?.split(" ")[0] ?? "New"}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+      {chats.length ? <Text style={styles.section}>Messages</Text> : null}
+    </View>
+  ) : undefined;
+
   const list = (
     <>
       <T variant="title" style={styles.title}>Matches</T>
@@ -37,20 +55,21 @@ export default function Matches() {
         <ActivityIndicator color={colors.brand} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={items}
+          data={chats}
+          ListHeaderComponent={rail}
           keyExtractor={(m) => m.matchId}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} tintColor={colors.brand} />}
           contentContainerStyle={items.length === 0 ? { flex: 1 } : { paddingBottom: 16 }}
-          ListEmptyComponent={
+          ListEmptyComponent={fresh.length ? undefined : (
             <View style={styles.empty}>
               <Ionicons name="chatbubbles-outline" size={52} color={colors.hairline} />
               <T variant="h2">No matches yet</T>
               <T variant="small" style={{ textAlign: "center" }}>When you and someone like each other, you&apos;ll find them here.</T>
             </View>
-          }
+          )}
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => (wide ? router.setParams({ c: item.matchId }) : router.push(`/chat/${item.matchId}`))}
+              onPress={() => open(item.matchId)}
               accessibilityRole="button"
               accessibilityLabel={`Chat with ${item.user.name ?? "your match"}`}
               style={({ pressed }) => [styles.row, (pressed || (wide && item.matchId === openId)) && { backgroundColor: colors.bg }]}
@@ -61,12 +80,7 @@ export default function Matches() {
                   <Text style={styles.name} numberOfLines={1}>{item.user.name ?? "Your match"}</Text>
                   {item.user.verified ? <Ionicons name="checkmark-circle" size={16} color={colors.verified} /> : null}
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  {!item.lastMessage ? <View style={styles.newDot} /> : null}
-                  <Text style={[styles.last, !item.lastMessage && { color: colors.ink, fontFamily: font.medium }]} numberOfLines={2}>
-                    {item.lastMessage ?? "New match. Say hi 👋"}
-                  </Text>
-                </View>
+                <Text style={styles.last} numberOfLines={2}>{item.lastMessage}</Text>
               </View>
             </Pressable>
           )}
@@ -104,5 +118,9 @@ const styles = StyleSheet.create({
   rowBody: { flex: 1, minWidth: 0, paddingVertical: 14, paddingRight: 16, gap: 2, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline },
   name: { fontFamily: font.semibold, fontSize: 16.5, color: colors.ink, flexShrink: 1 },
   last: { flexShrink: 1, fontFamily: font.regular, fontSize: 14.5, lineHeight: 19, color: colors.muted },
-  newDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.brand },
+  section: { fontFamily: font.bold, fontSize: 15, color: colors.ink, letterSpacing: -0.2, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
+  rail: { paddingHorizontal: 12, gap: 6, paddingBottom: 6 },
+  fresh: { width: 80, alignItems: "center", gap: 6 },
+  freshRing: { padding: 3, borderRadius: 40, borderWidth: 2, borderColor: colors.brand },
+  freshName: { fontFamily: font.semibold, fontSize: 13, color: colors.ink, maxWidth: 76 },
 });

@@ -7,7 +7,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Alert, Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../components/ui";
+import { Button, Pattern } from "../components/ui";
 import { API_URL } from "../lib/config";
 import { googleEnabled, signInWithGoogle } from "../lib/google";
 import { colors, font } from "../lib/theme";
@@ -110,6 +110,7 @@ export default function Welcome() {
   if (wide) {
     return (
       <View style={[styles.root, { flexDirection: "row" }]}>
+        <Pattern />
         <View style={{ flex: 1 }}>
           <Collage width={width - PANEL} height={height} reserve={40} />
           <LinearGradient
@@ -129,6 +130,7 @@ export default function Welcome() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
+      <Pattern />
       <Collage width={phone.width} height={phone.height} reserve={330} />
       {/* Fade: dimmed at the top (status bar legibility), photos clear in the middle, deep plum behind the buttons. */}
       <LinearGradient

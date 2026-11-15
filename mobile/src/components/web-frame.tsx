@@ -51,7 +51,7 @@ export function ModalFrame({ children, tall, inline, onClose }: { children: Reac
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#E5E5EA" },
+  page: { flex: 1, backgroundColor: colors.line },
   app: {
     flex: 1, width: "100%", maxWidth: MAX, alignSelf: "center", backgroundColor: colors.bg, overflow: "hidden",
     boxShadow: "0 0 40px rgba(0,0,0,0.12)",

@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { ModalFrame, useWide } from "../../components/web-frame";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
@@ -11,21 +13,21 @@ import {
   AboutSection, formFrom, PhotosSection, PreferencesSection, saveSteps, VibesSection, VoiceSection, WhereSection,
   type Form, type Step,
 } from "../../components/profile-form";
-import { Avatar, Button, Group, Notice, Row, Screen, T } from "../../components/ui";
+import { Button, Group, Notice, Row, Screen, T } from "../../components/ui";
 import { useProfile, type Me } from "../../ctx/profile";
 import { useSession } from "../../ctx/session";
 import { api, mimeFor, uploadFile } from "../../lib/api";
 import { API_URL } from "../../lib/config";
 import { ask, tell } from "../../lib/dialog";
-import { colors, font, tile } from "../../lib/theme";
+import { colors, font } from "../../lib/theme";
 
-const SECTIONS: { step: Step; icon: keyof typeof Ionicons.glyphMap; tint: string }[] = [
-  { step: "Photos", icon: "images", tint: tile.orange },
-  { step: "About you", icon: "person", tint: tile.blue },
-  { step: "Where & who", icon: "location", tint: tile.green },
-  { step: "Voice intro", icon: "mic", tint: tile.red },
-  { step: "Vibe check", icon: "sparkles", tint: tile.purple },
-  { step: "Preferences", icon: "options", tint: tile.gray },
+const SECTIONS: { step: Step; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { step: "Photos", icon: "images" },
+  { step: "About you", icon: "person" },
+  { step: "Where & who", icon: "location" },
+  { step: "Voice intro", icon: "mic" },
+  { step: "Vibe check", icon: "sparkles" },
+  { step: "Preferences", icon: "options" },
 ];
 
 export default function Profile() {
@@ -80,24 +82,46 @@ export default function Profile() {
   const link = (path: string) => () => WebBrowser.openBrowserAsync(`${API_URL}${path}`);
   const verifyValue = me.verified ? "Verified" : me.selfieStatus === "pending" ? "In review" : "";
 
+  // What makes a profile get replies; the first unfinished one is suggested next.
+  const checklist: { done: boolean; label: string; step: Step | "Verify" }[] = [
+    { done: me.photos.length >= 3, label: "add at least 3 photos", step: "Photos" },
+    { done: !!me.prompts?.length, label: "answer a prompt", step: "About you" },
+    { done: !!me.voiceIntroUrl, label: "record a voice intro", step: "Voice intro" },
+    { done: !!me.vibeAnswers && Object.keys(me.vibeAnswers).length > 0, label: "do the vibe check", step: "Vibe check" },
+    { done: me.verified || me.selfieStatus === "pending", label: "get verified", step: "Verify" },
+  ];
+  const todo = checklist.filter((c) => !c.done);
+  const percent = Math.round(((checklist.length - todo.length) / checklist.length) * 60) + 40; // a finished sign-up starts at 40%
+
   // Computers: you on the left, settings on the right.
   const you = (
     <>
-        <Pressable onPress={() => setOpen("Photos")} accessibilityRole="button" accessibilityLabel="Edit photos"
-          style={({ pressed }) => [styles.me, wide && styles.meWide, pressed && { backgroundColor: "#E5E5EA" }]}>
-          <Avatar uri={form.photos[0]} name={me.name} size={wide ? 112 : 62} />
-          <View style={wide ? { alignItems: "center", maxWidth: "100%" } : { flex: 1, minWidth: 0 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        <Pressable onPress={() => setOpen("Photos")} accessibilityRole="button" accessibilityLabel="Edit photos" style={styles.hero}>
+          {form.photos[0] ? <Image source={form.photos[0]} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+          <LinearGradient colors={["transparent", "rgba(20,10,24,0.85)"]} style={styles.heroShade} />
+          <View style={styles.heroEdit}><Ionicons name="camera" size={15} color={colors.white} /><Text style={styles.heroEditText}>Edit photos</Text></View>
+          <View style={styles.heroInfo}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text style={styles.meName} numberOfLines={1}>{me.name || "You"}{me.age ? `, ${me.age}` : ""}</Text>
-              {me.verified ? <Ionicons name="checkmark-circle" size={18} color={colors.verified} accessibilityLabel="Verified" /> : null}
+              {me.verified ? <Ionicons name="checkmark-circle" size={20} color={colors.white} accessibilityLabel="Verified" /> : null}
             </View>
             <Text style={styles.meSub} numberOfLines={1}>{me.email}</Text>
           </View>
-          {wide ? <Text style={styles.meEdit}>Edit photos</Text> : <Ionicons name="chevron-forward" size={18} color={colors.hairline} />}
         </Pressable>
 
+        {todo.length ? (
+          <Pressable onPress={() => setOpen(todo[0].step)} accessibilityRole="button" style={({ pressed }) => [styles.progress, pressed && { backgroundColor: colors.pressed }]}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
+              <Text style={styles.progressTitle}>Your profile is {percent}% complete</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.faint} />
+            </View>
+            <View style={styles.track}><View style={[styles.fillBar, { width: `${percent}%` }]} /></View>
+            <Text style={styles.progressNext}>Next: {todo[0].label}</Text>
+          </Pressable>
+        ) : null}
+
         <Group footer={me.verified ? undefined : "Verified profiles get more trust and more matches."}>
-          <Row icon="checkmark-circle" tint={tile.blue} title="Verification" value={verifyValue} last
+          <Row icon="checkmark-circle" title="Verification" value={verifyValue} last
             onPress={me.verified || me.selfieStatus === "pending" ? undefined : () => setOpen("Verify")} chevron={!me.verified && me.selfieStatus !== "pending"} />
         </Group>
     </>
@@ -106,22 +130,22 @@ export default function Profile() {
     <>
 
         <Group header="Your profile">
-          {SECTIONS.map(({ step, icon, tint }, i) => (
-            <Row key={step} icon={icon} tint={tint} title={step} value={values[step]} onPress={() => setOpen(step)} last={i === SECTIONS.length - 1} />
+          {SECTIONS.map(({ step, icon }, i) => (
+            <Row key={step} icon={icon} title={step} value={values[step]} onPress={() => setOpen(step)} last={i === SECTIONS.length - 1} />
           ))}
         </Group>
 
         {web ? null : <NotificationsCard />}
 
         <Group>
-          {me.isAdmin ? <Row icon="shield-checkmark" tint={tile.indigo} title="Admin dashboard" onPress={link("/admin")} /> : null}
-          <Row icon="document-text" tint={tile.gray} title="Terms" onPress={link("/terms")} />
-          <Row icon="lock-closed" tint={tile.gray} title="Privacy" onPress={link("/privacy")} last />
+          {me.isAdmin ? <Row icon="shield-checkmark" title="Admin dashboard" onPress={link("/admin")} /> : null}
+          <Row icon="document-text" title="Terms" onPress={link("/terms")} />
+          <Row icon="lock-closed" title="Privacy" onPress={link("/privacy")} last />
         </Group>
 
         {web ? null : (
           <Group footer={`Twain ${installedVersion}`}>
-            <Row icon="arrow-down-circle" tint={tile.green} title="Check for updates" onPress={() => checkForUpdate(true)} last />
+            <Row icon="arrow-down-circle" title="Check for updates" onPress={() => checkForUpdate(true)} last />
           </Group>
         )}
 
@@ -251,19 +275,26 @@ function Verification({ me, onDone }: { me: Me; onDone: () => Promise<unknown> }
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 24 },
-  me: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.card, borderRadius: 12, padding: 14, marginTop: -8 },
-  meName: { fontFamily: font.semibold, fontSize: 20, color: colors.ink, flexShrink: 1, letterSpacing: -0.3 },
-  meWide: { flexDirection: "column", paddingVertical: 28, marginTop: 0, gap: 12 },
-  meEdit: { fontFamily: font.semibold, fontSize: 15, color: colors.brand },
+  hero: { height: 340, borderRadius: 24, overflow: "hidden", backgroundColor: colors.plum, marginTop: -8 },
+  heroShade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 170 },
+  heroInfo: { position: "absolute", left: 18, right: 18, bottom: 16 },
+  heroEdit: { position: "absolute", top: 14, right: 14, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(20,10,24,0.55)", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
+  heroEditText: { fontFamily: font.semibold, fontSize: 13, color: colors.white },
+  progress: { backgroundColor: colors.card, borderRadius: 18, borderWidth: 1, borderColor: colors.line, padding: 16, gap: 10, marginTop: -8 },
+  progressTitle: { fontFamily: font.bold, fontSize: 15.5, color: colors.ink, letterSpacing: -0.2 },
+  progressNext: { fontFamily: font.medium, fontSize: 13.5, color: colors.brand },
+  track: { height: 6, borderRadius: 3, backgroundColor: colors.bg, overflow: "hidden" },
+  fillBar: { height: 6, borderRadius: 3, backgroundColor: colors.brand },
+  meName: { fontFamily: font.black, fontSize: 28, color: colors.white, flexShrink: 1, letterSpacing: -0.8 },
   columns: { flexDirection: "row", gap: 28, alignItems: "flex-start" },
-  left: { width: 320, gap: 24 },
+  left: { width: 340, gap: 24 },
   right: { flex: 1, gap: 24, minWidth: 0 },
-  meSub: { fontFamily: font.regular, fontSize: 14, color: colors.muted, marginTop: 2 },
+  meSub: { fontFamily: font.medium, fontSize: 13.5, color: "rgba(255,255,255,0.75)", marginTop: 2 },
   pose: { backgroundColor: colors.card, borderRadius: 12, padding: 16 },
   poseText: { fontFamily: font.bold, fontSize: 18, color: colors.ink, textAlign: "center" },
   sheetBar: {
     flexDirection: "row", alignItems: "center", height: 56, paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline, backgroundColor: "#F9F9F9",
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline, backgroundColor: colors.bar,
   },
   sheetSide: { width: 72 },
   sheetTitle: { flex: 1, textAlign: "center", fontFamily: font.semibold, fontSize: 17, color: colors.ink },

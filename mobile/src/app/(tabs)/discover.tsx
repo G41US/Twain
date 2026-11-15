@@ -7,7 +7,7 @@ import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Modal, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { VoicePlayer } from "../../components/profile-form";
 import { ReportSheet } from "../../components/report-sheet";
-import { Button, Screen, T } from "../../components/ui";
+import { Avatar, Button, Pattern, Screen, T } from "../../components/ui";
 import { useProfile } from "../../ctx/profile";
 import { api, ApiError } from "../../lib/api";
 import { tell } from "../../lib/dialog";
@@ -128,10 +128,16 @@ export default function Discover() {
 
       {!top ? (
         <View style={styles.center}>
-          <Ionicons name="people-outline" size={52} color={colors.hairline} />
-          <T variant="h2" style={{ textAlign: "center" }}>{error ? "Couldn't load" : "No one new nearby right now"}</T>
+          {/* You at the centre of the search rings. */}
+          <View style={styles.radar}>
+            <View style={[styles.ring, { width: 220, height: 220, opacity: 0.35 }]} />
+            <View style={[styles.ring, { width: 156, height: 156, opacity: 0.6 }]} />
+            <View style={[styles.ring, { width: 100, height: 100 }]} />
+            <Avatar uri={me?.photos[0]} name={me?.name} size={72} />
+          </View>
+          <T variant="h2" style={{ textAlign: "center" }}>{error ? "Couldn't load" : "You've seen everyone nearby"}</T>
           <T variant="small" style={{ textAlign: "center" }}>
-            {error || `Try a bigger distance (now ${me?.maxDistanceKm ?? 50} km) or age range, or check back later.`}
+            {error || `New people join every day. Check back soon, or widen your distance (now ${me?.maxDistanceKm ?? 50} km).`}
           </T>
           <Button title="Refresh" icon="refresh" variant="secondary" onPress={() => { setPeople(null); load(); }} style={{ alignSelf: "stretch" }} />
           {lastSwiped && !error ? <Button title={`Undo: bring back ${lastSwiped.name ?? "them"}`} icon="arrow-undo" variant="ghost" onPress={undo} /> : null}
@@ -201,6 +207,7 @@ export default function Discover() {
       <Modal visible={!!match} transparent animationType="fade" onRequestClose={() => setMatch(null)}>
 <ModalFrame>
         <View style={styles.matchWrap}>
+          <Pattern opacity={0.09} />
           <Text style={styles.matchTitle}>It&apos;s a match</Text>
           <Text style={styles.matchSub}>You and {match?.person.name ?? "they"} like each other.</Text>
           <View style={styles.matchPhotos}>
@@ -244,13 +251,15 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 8 },
   logo: { fontFamily: font.black, fontSize: 30, color: colors.ink, letterSpacing: -1.2 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 },
+  radar: { width: 220, height: 220, alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  ring: { position: "absolute", borderRadius: 999, borderWidth: 1.5, borderColor: colors.brand, backgroundColor: "rgba(225,29,92,0.04)" },
   deck: { flex: 1, alignSelf: "center", marginTop: 4 },
-  card: { ...StyleSheet.absoluteFill, borderRadius: 24, overflow: "hidden", backgroundColor: "#1C1C1E" },
+  card: { ...StyleSheet.absoluteFill, borderRadius: 28, overflow: "hidden", backgroundColor: colors.plum },
   dots: { position: "absolute", top: 10, left: 12, right: 12, flexDirection: "row", gap: 4 },
   dot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.4)" },
   stamp: { position: "absolute", top: 40, flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 9 },
   like: { left: 18, backgroundColor: colors.brand },
-  nope: { right: 18, backgroundColor: "rgba(28,28,30,0.85)" },
+  nope: { right: 18, backgroundColor: "rgba(20,10,24,0.85)" },
   stampText: { fontFamily: font.bold, fontSize: 18, color: colors.white },
   flag: { position: "absolute", top: 24, right: 14, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.32)", alignItems: "center", justifyContent: "center" },
   info: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 80, paddingBottom: 20, gap: 8 },
@@ -265,7 +274,7 @@ const styles = StyleSheet.create({
   bio: { color: "rgba(255,255,255,0.92)", fontFamily: font.regular, fontSize: 15, lineHeight: 21 },
   actions: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 36, paddingVertical: 14 },
   round: { backgroundColor: colors.white, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  matchWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 12, backgroundColor: colors.plum },
+  matchWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 12, backgroundColor: colors.plum, overflow: "hidden" },
   matchTitle: { color: colors.white, fontFamily: font.black, fontSize: 40, letterSpacing: -1.2, textAlign: "center" },
   matchSub: { color: "rgba(255,255,255,0.7)", fontFamily: font.regular, fontSize: 16, textAlign: "center" },
   matchPhotos: { flexDirection: "row", marginVertical: 28 },

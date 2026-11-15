@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", padding: 24, gap: 16 },
   header: {
     flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingTop: 4, paddingBottom: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline, backgroundColor: "#F9F9F9",
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline, backgroundColor: colors.bar,
   },
   navSide: { width: 56, justifyContent: "center" },
   who: { flex: 1, alignItems: "center", gap: 3 },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontFamily: font.regular, fontSize: 16, color: colors.ink, lineHeight: 21 },
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: 8, paddingHorizontal: 10, paddingTop: 8,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.hairline, backgroundColor: "#F9F9F9",
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.hairline, backgroundColor: colors.bar,
   },
   wingman: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.fill, alignItems: "center", justifyContent: "center" },
   input: {

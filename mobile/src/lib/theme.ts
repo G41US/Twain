@@ -1,33 +1,24 @@
-// One accent (Twain rose) on iOS system neutrals. No decorative gradients: rose marks what you can act on.
+// Twain rose on plum-tinted neutrals: the same family as the welcome screen and the admin.
+// Rose marks what you can act on; everything else stays quiet.
 export const colors = {
   brand: "#E11D5C",
   brandTint: "#FCE7EE",
-  ink: "#1C1C1E",
-  plum: "#120B14", // welcome + match screens
-  muted: "#8A8A8E",
-  faint: "#AEAEB2",
-  line: "#E5E5EA",
-  hairline: "#D1D1D6",
-  bg: "#F2F2F7",
+  ink: "#140A18",
+  plum: "#140A18", // welcome, match screen, desktop sidebar
+  muted: "#6B6170",
+  faint: "#A39AA8",
+  line: "#EDE6F0",
+  hairline: "#DDD3E2",
+  bg: "#F7F3F8",
   card: "#FFFFFF",
-  fill: "rgba(118,118,128,0.12)",
+  bar: "#FCFAFD", // navigation and input bars
+  pressed: "#EFE8F2",
+  fill: "rgba(72,40,88,0.08)",
   success: "#34C759",
-  danger: "#FF3B30",
+  danger: "#D92D20",
   verified: "#007AFF",
   violet: "#AF52DE", // wingman sparkle only
   white: "#FFFFFF",
-};
-
-// iOS Settings-style icon tiles.
-export const tile = {
-  orange: "#FF9500",
-  blue: "#007AFF",
-  green: "#34C759",
-  red: "#FF3B30",
-  purple: "#AF52DE",
-  indigo: "#5856D6",
-  gray: "#8E8E93",
-  pink: "#E11D5C",
 };
 
 export const font = {

@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import {
-  ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Image as RNImage, Pressable, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
@@ -48,7 +48,7 @@ const BUTTON = {
   secondary: { bg: colors.fill, fg: colors.ink },
   light: { bg: colors.white, fg: colors.ink },
   ghost: { bg: "transparent", fg: colors.brand },
-  danger: { bg: "rgba(255,59,48,0.12)", fg: colors.danger },
+  danger: { bg: "rgba(217,45,32,0.1)", fg: colors.danger },
   clear: { bg: "transparent", fg: colors.white },
 } as const;
 
@@ -112,7 +112,7 @@ export function Choice<V extends string | number>({ options, value, onChange, la
               onPress={() => onChange(o.value)}
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
-              style={[styles.chip, on && { backgroundColor: colors.ink }]}
+              style={[styles.chip, on && { backgroundColor: colors.ink, borderColor: colors.ink }]}
             >
               <Text style={[styles.chipText, on && { color: colors.white }]}>{o.label}</Text>
             </Pressable>
@@ -139,17 +139,17 @@ export function Group({ header, footer, children, style }: { header?: string; fo
   );
 }
 
-/** Settings-style row: coloured icon tile, title, optional value and chevron. */
-export function Row({ icon, tint, title, value, onPress, destructive, last, chevron = !!onPress, right }: {
-  icon?: IconName; tint?: string; title: string; value?: string; onPress?: () => void;
+/** List row: quiet icon tile, title, optional value and chevron. */
+export function Row({ icon, title, value, onPress, destructive, last, chevron = !!onPress, right }: {
+  icon?: IconName; title: string; value?: string; onPress?: () => void;
   destructive?: boolean; last?: boolean; chevron?: boolean; right?: ReactNode;
 }) {
   return (
     <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? "button" : undefined}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: "#E5E5EA" }]}>
+      style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.pressed }]}>
       {icon ? (
-        <View style={[styles.tile, { backgroundColor: tint ?? colors.muted }]}>
-          <Ionicons name={icon} size={17} color={colors.white} />
+        <View style={styles.tile}>
+          <Ionicons name={icon} size={17} color={destructive ? colors.danger : colors.ink} />
         </View>
       ) : null}
       <View style={[styles.rowBody, !last && styles.rowLine]}>
@@ -206,38 +206,46 @@ export function Avatar({ uri, name, size }: { uri?: string | null; name?: string
   );
 }
 
+/** Adire-inspired pattern for plum surfaces (welcome, match screen, sidebar). Sits behind the content. */
+export function Pattern({ opacity = 0.07 }: { opacity?: number }) {
+  return (
+    <RNImage source={require("../../assets/images/adire.png")} resizeMode="repeat" accessibilityIgnoresInvertColors
+      style={[StyleSheet.absoluteFill, { width: "100%", height: "100%", opacity }]} />
+  );
+}
+
 /** Small handle at the top of bottom sheets. */
 export function Grabber() {
   return <View style={styles.grabber} />;
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: font.black, fontSize: 32, lineHeight: 38, color: colors.ink, letterSpacing: -0.8 },
+  title: { fontFamily: font.black, fontSize: 32, lineHeight: 38, color: colors.ink, letterSpacing: -1.1 },
   h2: { fontFamily: font.bold, fontSize: 20, lineHeight: 25, color: colors.ink, letterSpacing: -0.3 },
   body: { fontFamily: font.regular, fontSize: 16, color: colors.ink, lineHeight: 22 },
   small: { fontFamily: font.regular, fontSize: 13.5, color: colors.muted, lineHeight: 19 },
   label: { fontFamily: font.semibold, fontSize: 15, color: colors.ink },
-  button: { height: 52, borderRadius: 14, justifyContent: "center" },
+  button: { height: 54, borderRadius: 27, justifyContent: "center" },
   buttonInner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 18 },
-  buttonText: { fontFamily: font.semibold, fontSize: 16.5 },
+  buttonText: { fontFamily: font.bold, fontSize: 16, letterSpacing: -0.1 },
   field: {
-    backgroundColor: colors.card, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline,
+    backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.line,
     paddingHorizontal: 14, paddingVertical: 13, fontFamily: font.regular, fontSize: 16, color: colors.ink,
   },
   checkRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 },
   checkLabel: { flex: 1, fontFamily: font.regular, fontSize: 15, color: colors.ink, lineHeight: 21 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18, backgroundColor: colors.fill },
+  chip: { paddingHorizontal: 15, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
   chipText: { fontFamily: font.medium, fontSize: 14.5, color: colors.ink },
-  card: { backgroundColor: colors.card, borderRadius: 14, padding: 16, gap: 10 },
-  group: { backgroundColor: colors.card, borderRadius: 12, overflow: "hidden" },
-  groupHeader: { fontFamily: font.medium, fontSize: 13, color: colors.muted, marginLeft: 16, marginBottom: 7 },
-  groupFooter: { fontFamily: font.regular, fontSize: 13, lineHeight: 18, color: colors.muted, marginHorizontal: 16, marginTop: 7 },
-  row: { flexDirection: "row", alignItems: "center", paddingLeft: 16, minHeight: 48, backgroundColor: colors.card },
-  tile: { width: 30, height: 30, borderRadius: 7, alignItems: "center", justifyContent: "center", marginRight: 14 },
-  rowBody: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "stretch", paddingRight: 14, minHeight: 48 },
-  rowLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline },
-  rowTitle: { flex: 1, fontFamily: font.regular, fontSize: 16, color: colors.ink },
+  card: { backgroundColor: colors.card, borderRadius: 18, padding: 16, gap: 10, borderWidth: 1, borderColor: colors.line },
+  group: { backgroundColor: colors.card, borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: colors.line },
+  groupHeader: { fontFamily: font.bold, fontSize: 15, color: colors.ink, marginLeft: 4, marginBottom: 10, letterSpacing: -0.2 },
+  groupFooter: { fontFamily: font.regular, fontSize: 13, lineHeight: 18, color: colors.muted, marginHorizontal: 4, marginTop: 8 },
+  row: { flexDirection: "row", alignItems: "center", paddingLeft: 14, minHeight: 56, backgroundColor: colors.card },
+  tile: { width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center", marginRight: 12, backgroundColor: colors.bg },
+  rowBody: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "stretch", paddingRight: 14, minHeight: 56 },
+  rowLine: { borderBottomWidth: 1, borderBottomColor: colors.line },
+  rowTitle: { flex: 1, fontFamily: font.medium, fontSize: 15.5, color: colors.ink },
   rowValue: { fontFamily: font.regular, fontSize: 15, color: colors.muted, maxWidth: "50%" },
   notice: { flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 4 },
   noticeText: { flex: 1, fontFamily: font.medium, fontSize: 14, lineHeight: 20, color: colors.ink },

@@ -1,15 +1,15 @@
 import { Modal, Pressable, Share, StyleSheet, View } from "react-native";
 import { ModalFrame } from "./web-frame";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, tile } from "../lib/theme";
+import { colors } from "../lib/theme";
 import { Button, Grabber, Group, Row, T } from "./ui";
 
 const TIPS = [
-  { icon: "people", tint: tile.blue, text: "Meet somewhere public and busy" },
-  { icon: "car", tint: tile.green, text: "Get there and home on your own" },
-  { icon: "chatbubbles", tint: tile.orange, text: "Tell a friend where you're going" },
-  { icon: "wine", tint: tile.purple, text: "Keep your drink and phone with you" },
-  { icon: "exit", tint: tile.red, text: "Leave whenever you want" },
+  { icon: "people", text: "Meet somewhere public and busy" },
+  { icon: "car", text: "Get there and home on your own" },
+  { icon: "chatbubbles", text: "Tell a friend where you're going" },
+  { icon: "wine", text: "Keep your drink and phone with you" },
+  { icon: "exit", text: "Leave whenever you want" },
 ] as const;
 
 /** First-date safety checklist, plus a ready-made message to tell a friend the plan. */
@@ -30,7 +30,7 @@ export function DateSafetySheet({ name, visible, onClose }: { name: string; visi
           <T variant="small">A few habits that keep first dates relaxed and safe.</T>
         </View>
         <Group footer="Never send money, airtime or bank details to anyone you meet here.">
-          {TIPS.map((t, i) => <Row key={t.text} icon={t.icon} tint={t.tint} title={t.text} last={i === TIPS.length - 1} />)}
+          {TIPS.map((t, i) => <Row key={t.text} icon={t.icon} title={t.text} last={i === TIPS.length - 1} />)}
         </Group>
         <Button title="Tell a friend the plan" icon="share-outline" onPress={share} />
         <Button title="Done" variant="ghost" onPress={onClose} style={{ marginTop: -6 }} />

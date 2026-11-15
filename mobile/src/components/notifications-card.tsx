@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { enablePush, pushPermission, type PushState } from "../lib/push";
-import { tile } from "../lib/theme";
 import { Group, Row } from "./ui";
 
 const FOOTER: Record<PushState | "", string> = {
@@ -22,7 +21,7 @@ export function NotificationsCard() {
   return (
     <Group footer={FOOTER[state] || undefined}>
       <Row
-        icon="notifications" tint={tile.red} title="Notifications" last
+        icon="notifications" title="Notifications" last
         value={state === "granted" ? "On" : state === "undetermined" ? "Turn on" : state ? "Off" : ""}
         onPress={canAsk ? async () => setState(await enablePush()) : undefined}
       />
