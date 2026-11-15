@@ -23,6 +23,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    try { localStorage.removeItem("twain.me"); } catch { /* nothing saved */ }
     if (DEMO_EMAIL) return setSession(null);
     await supabase.auth.signOut();
   };

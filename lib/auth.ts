@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
 };
 
 const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-// shortcut: per-instance cache of verified app tokens (1 min); drop if tokens must be revoked instantly.
+// shortcut: per-instance cache of verified app tokens (5 min); bans still apply at once (checked in the database below).
 const tokenCache = new Map<string, { email: string; name: string | null; image: string | null; until: number }>();
 
 /** Native app: "Authorization: Bearer <Supabase access token>" → the verified email it belongs to. */
@@ -71,7 +71,7 @@ async function appIdentity() {
     email: u.email.toLowerCase(),
     name: (u.user_metadata?.full_name ?? u.user_metadata?.name ?? null) as string | null,
     image: (u.user_metadata?.avatar_url ?? null) as string | null,
-    until: Date.now() + 60_000,
+    until: Date.now() + 5 * 60_000,
   };
   if (tokenCache.size > 5000) tokenCache.clear();
   tokenCache.set(token, id);
@@ -89,11 +89,9 @@ export async function getCurrentUser() {
   let user;
   if (app) {
     // Same person whether they first came in on the website or the app: matched by verified email.
-    user = await prisma.user.upsert({
-      where: { email: app.email },
-      create: { email: app.email, name: app.name, image: app.image },
-      update: {},
-    });
+    // Read first: an upsert would write to the database on every single request.
+    user = await prisma.user.findUnique({ where: { email: app.email } })
+      ?? await prisma.user.upsert({ where: { email: app.email }, create: { email: app.email, name: app.name, image: app.image }, update: {} });
   } else {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return null;

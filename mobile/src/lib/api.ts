@@ -1,3 +1,4 @@
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { File } from "expo-file-system";
 import { Platform } from "react-native";
 import { API_URL, DEMO_EMAIL } from "./config";
@@ -34,10 +35,22 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
  * Upload a photo, selfie or voice clip. The API hands out a one-time ticket for a random path;
  * Supabase Storage only accepts uploads to ticketed paths. Returns the public URL.
  */
-export async function uploadFile(kind: "photo" | "selfie" | "voice", uri: string, contentType: string): Promise<string> {
+const PHOTO_WIDTH = 1080; // plenty for a phone screen; keeps photos quick to load on mobile data
+
+/** `width`: the picked image's width, so big photos are shrunk before upload. */
+export async function uploadFile(kind: "photo" | "selfie" | "voice", uri: string, contentType: string, width?: number): Promise<string> {
+  if (kind !== "voice" && (!width || width > PHOTO_WIDTH)) {
+    try {
+      const img = await ImageManipulator.manipulate(uri).resize({ width: PHOTO_WIDTH }).renderAsync();
+      uri = (await img.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 })).uri;
+      contentType = "image/jpeg";
+    } catch {
+      // couldn't shrink it (odd format): upload the original
+    }
+  }
   const { path, publicUrl } = await api<{ path: string; publicUrl: string }>("/api/upload", { body: { kind, contentType } });
   const bytes = Platform.OS === "web" ? await (await fetch(uri)).arrayBuffer() : await new File(uri).arrayBuffer();
-  const { error } = await supabase.storage.from("media").upload(path, bytes, { contentType });
+  const { error } = await supabase.storage.from("media").upload(path, bytes, { contentType, cacheControl: "31536000" }); // file names are unique, so cache for good
   if (error) throw error;
   return publicUrl;
 }

@@ -38,6 +38,17 @@ export const isComplete = (m: Me | null) =>
 type Ctx = { me: Me | null; loading: boolean; error: string; refresh: () => Promise<Me | null> };
 const ProfileContext = createContext<Ctx>({ me: null, loading: true, error: "", refresh: async () => null });
 
+// Last profile seen on this device, so the app opens straight away and refreshes in the background.
+const SAVED = "twain.me";
+function savedProfile(email?: string): Me | null {
+  try {
+    const m = JSON.parse(localStorage.getItem(SAVED) ?? "null") as Me | null;
+    return m && email && m.email === email.toLowerCase() ? m : null; // never another account's profile
+  } catch {
+    return null;
+  }
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { session, signOut } = useSession();
   const token = session?.access_token ?? null;
@@ -48,6 +59,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     try {
       const p = await api<Me>("/api/profile");
       setState({ me: p, error: "", token });
+      try { localStorage.setItem(SAVED, JSON.stringify(p)); } catch { /* storage full or blocked: only costs the fast start */ }
       return p;
     } catch (e) {
       // 401 here means the account was banned or deleted: drop the stale session.
@@ -63,10 +75,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const current = !!token && state.token === token;
+  const saved = token && !current ? savedProfile(session?.user?.email) : null;
   const value = {
-    me: current ? state.me : null,
+    me: current ? state.me : saved,
     error: current ? state.error : "",
-    loading: !!token && !current,
+    loading: !!token && !current && !saved,
     refresh,
   };
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;

@@ -246,7 +246,7 @@ function Verification({ me, onDone }: { me: Me; onDone: () => Promise<unknown> }
     const asset = res.assets[0];
     setBusy(true);
     try {
-      const selfieUrl = await uploadFile("selfie", asset.uri, mimeFor(asset.uri, asset.mimeType));
+      const selfieUrl = await uploadFile("selfie", asset.uri, mimeFor(asset.uri, asset.mimeType), asset.width);
       await api("/api/verify", { body: { selfieUrl } });
       await onDone();
     } catch {

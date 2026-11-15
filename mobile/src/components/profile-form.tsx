@@ -117,7 +117,7 @@ export function PhotosSection({ form, set, setError }: SectionProps) {
     const a = res.assets[0];
     setBusy(true);
     try {
-      const url = await uploadFile("photo", a.uri, mimeFor(a.fileName ?? a.uri, a.mimeType));
+      const url = await uploadFile("photo", a.uri, mimeFor(a.fileName ?? a.uri, a.mimeType), a.width);
       set({ photos: [...form.photos, url].slice(0, MAX_PHOTOS) });
     } catch {
       setError("Upload failed. Use a JPG, PNG or WebP photo under 4MB.");

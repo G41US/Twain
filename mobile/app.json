@@ -3,7 +3,7 @@
     "name": "Twain",
     "slug": "twain",
     "scheme": "twain",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.g41us.twain",
-      "versionCode": 12,
+      "versionCode": 13,
       "adaptiveIcon": {
         "backgroundColor": "#B42EB3",
         "foregroundImage": "./assets/android-icon-foreground.png",

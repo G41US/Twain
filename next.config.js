@@ -21,6 +21,14 @@ const nextConfig = {
       ],
     };
   },
+  // Hashed app files never change: let phones keep them instead of re-checking on every visit.
+  async headers() {
+    const forever = [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }];
+    return [
+      { source: '/app/_expo/:path*', headers: forever },
+      { source: '/app/assets/:path*', headers: forever },
+    ];
+  },
   async redirects() {
     return [
       { source: '/', destination: '/app', permanent: false },
