@@ -1,10 +1,9 @@
-import { useSegments } from "expo-router";
 import type { ReactNode } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import { colors } from "../lib/theme";
 
-// Phone browsers get the app edge to edge. Computers get a desktop layout once signed in
-// (sidebar + wide content column); sign-in screens stay in a centred phone-width column.
+// Phone browsers get the app edge to edge. Computers get a desktop layout on every screen
+// (split welcome, sidebar, wide content column); tablet-sized windows get a centred phone column.
 // Native: renders children untouched.
 const MAX = 480;
 const WIDE = 900; // px of browser width where the desktop layout starts
@@ -18,12 +17,10 @@ export function useWide() {
 
 export function WebFrame({ children }: { children: ReactNode }) {
   const wide = useWide();
-  const [first] = useSegments();
   if (Platform.OS !== "web") return children;
-  const desktop = wide && (first === "(tabs)" || first === "chat");
   return (
     <View style={styles.page}>
-      <View style={desktop ? styles.full : styles.app}>{children}</View>
+      <View style={wide ? styles.full : styles.app}>{children}</View>
     </View>
   );
 }

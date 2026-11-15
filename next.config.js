@@ -16,7 +16,8 @@ const nextConfig = {
     return {
       fallback: [
         { source: '/app', destination: '/app/index.html' },
-        { source: '/app/:path*', destination: '/app/index.html' },
+        // Only page routes: a missing /app/_expo file must 404, not return HTML the browser tries to run as JS.
+        { source: '/app/:path((?!_expo/).*)', destination: '/app/index.html' },
       ],
     };
   },

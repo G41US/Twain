@@ -365,10 +365,10 @@ export function PreferencesSection({ form, set }: SectionProps) {
   return (
     <View style={{ gap: 18 }}>
       <T variant="small">Optional. Never shown on your profile.</T>
-      <Choice label="Your ethnicity" options={opts} value={form.ethnicity} onChange={(v) => set({ ethnicity: v })} />
+      <Choice label="Your ethnic group" options={opts} value={form.ethnicity} onChange={(v) => set({ ethnicity: v })} />
       {form.ethnicity ? (
         <Check checked={form.sensitiveConsent} onChange={(v) => set({ sensitiveConsent: v })}
-          label="I consent to Twain storing my ethnicity, which is sensitive personal data, only for matching filters. I can remove it any time." />
+          label="I consent to Twain storing my ethnic group, which is sensitive personal data, only for matching filters. I can remove it any time." />
       ) : null}
       <Choice
         label="Who do you prefer to see? (private, never shown)"

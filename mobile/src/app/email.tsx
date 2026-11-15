@@ -58,7 +58,7 @@ export default function EmailSignIn() {
   };
 
   return (
-    <Screen edges={["top", "bottom"]}>
+    <Screen edges={["top", "bottom"]} narrow>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.wrap}>
           <Pressable

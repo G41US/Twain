@@ -34,8 +34,8 @@ export const DEALBREAKERS = [
 export const TRAIT_VALUES: string[] = TRAITS.map((t) => t.value);
 
 export const ETHNICITIES = [
-  "Black", "White", "Asian", "Latin/Hispanic",
-  "Middle Eastern", "Indian/South Asian", "Native/Indigenous", "Mixed", "Other",
+  "Yoruba", "Igbo", "Hausa", "Fulani", "Ijaw", "Kanuri", "Ibibio", "Efik", "Annang",
+  "Tiv", "Edo", "Urhobo", "Itsekiri", "Igala", "Idoma", "Nupe", "Mixed", "Other",
 ];
 export const slug = (s: string) => s.toLowerCase().replace(/[^a-z]/g, "");
 

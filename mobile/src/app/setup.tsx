@@ -54,7 +54,7 @@ export default function Setup() {
   };
 
   return (
-    <Screen edges={["top", "bottom"]}>
+    <Screen edges={["top", "bottom"]} narrow>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.progress} accessibilityLabel={`Step ${step + 1} of ${STEPS.length}`}>
           {STEPS.map((s, i) => <View key={s} style={[styles.bar, i <= step && { backgroundColor: colors.brand }]} />)}
@@ -71,8 +71,8 @@ export default function Setup() {
             <Button title="Sign out" variant="secondary" style={{ minWidth: 116 }} onPress={signOut} />
           )}
           <Button
-            title={last ? "Start swiping" : name === "Voice intro" && !form.voiceIntroUrl ? "Skip for now" : "Next"}
-            icon={last ? "flame" : undefined}
+            title={last ? "Start matching" : name === "Voice intro" && !form.voiceIntroUrl ? "Skip for now" : "Next"}
+            icon={last ? "heart" : undefined}
             style={{ flex: 1 }}
             loading={saving}
             onPress={next}

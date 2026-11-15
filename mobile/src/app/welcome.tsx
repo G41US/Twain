@@ -1,11 +1,11 @@
 import { Image } from "expo-image";
-import { useAppSize } from "../components/web-frame";
+import { useAppSize, useWide } from "../components/web-frame";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { Alert, Animated, Platform, StyleSheet, Text, View } from "react-native";
+import { Alert, Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui";
 import { API_URL } from "../lib/config";
@@ -23,11 +23,10 @@ const COLLAGE = [
   { src: require("../../assets/images/welcome-3.jpg"), x: 0.06, w: 0.44, y: 0.37, tilt: "5deg" },
 ] as const;
 
-function Collage() {
-  const { width, height } = useAppSize();
+function Collage({ width, height, reserve }: { width: number; height: number; reserve: number }) {
   // Shrink on short or wide screens so the photos always end above the logo and buttons.
-  // The lowest card ends ~1.4 units down; ~330px at the bottom belongs to the logo, tagline and buttons.
-  const u = Math.min(width, (height - 330) / 1.35);
+  // The lowest card ends ~1.4 units down; `reserve` px at the bottom stay free (logo, tagline and buttons on phones).
+  const u = Math.min(width, (height - reserve) / 1.35);
   const offset = (width - u) / 2;
   const [fades] = useState(() => COLLAGE.map(() => new Animated.Value(0)));
   useEffect(() => {
@@ -55,6 +54,9 @@ function Collage() {
 }
 
 export default function Welcome() {
+  const phone = useAppSize();
+  const wide = useWide();
+  const { width, height } = useWindowDimensions();
   const [google, setGoogle] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -73,10 +75,61 @@ export default function Welcome() {
     if (err && err !== "cancel") Alert.alert("Couldn't sign in", err);
   };
 
+  const badge = (
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>🇳🇬  Made for Nigeria</Text>
+    </View>
+  );
+  const panel = (
+    <View style={styles.bottom}>
+      <Text style={styles.logo} accessibilityRole="header">
+        Twain<Text style={{ color: colors.brand }}>.</Text>
+      </Text>
+      <Text style={styles.tagline}>Real people. Real vibes.{"\n"}People who actually reply.</Text>
+
+      <View style={styles.buttons}>
+        <Button title="Continue with Google" icon="logo-google" variant="light" onPress={onGoogle} loading={busy} />
+        <Button title="Continue with email" icon="mail" onPress={() => router.push("/email")} />
+      </View>
+
+      <Text style={styles.legal}>
+        18+ only. By continuing you agree to our{" "}
+        <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/terms`)}>Terms</Text> and{" "}
+        <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/privacy`)}>Privacy Policy</Text>.
+      </Text>
+      {Platform.OS === "web" ? (
+        <Text style={styles.legal}>
+          On Android?{" "}
+          <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(ANDROID_APK)}>Get the app</Text>
+        </Text>
+      ) : null}
+    </View>
+  );
+
+  // Computers: photos on the left, sign-in on the right.
+  if (wide) {
+    return (
+      <View style={[styles.root, { flexDirection: "row" }]}>
+        <View style={{ flex: 1 }}>
+          <Collage width={width - PANEL} height={height} reserve={40} />
+          <LinearGradient
+            colors={["rgba(20,10,24,0.25)", "rgba(20,10,24,0.05)", "rgba(20,10,24,0.55)", colors.plum]}
+            locations={[0, 0.55, 0.85, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
+        <View style={styles.side}>
+          <View style={{ flexDirection: "row" }}>{badge}</View>
+          {panel}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <Collage />
+      <Collage width={phone.width} height={phone.height} reserve={330} />
       {/* Fade: dimmed at the top (status bar legibility), photos clear in the middle, deep plum behind the buttons. */}
       <LinearGradient
         colors={["rgba(20,10,24,0.6)", "rgba(20,10,24,0.1)", "rgba(20,10,24,0.2)", "rgba(20,10,24,0.85)", colors.plum]}
@@ -84,37 +137,14 @@ export default function Welcome() {
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>🇳🇬  Made for Nigeria</Text>
-        </View>
-
-        <View style={styles.bottom}>
-          <Text style={styles.logo} accessibilityRole="header">
-            Twain<Text style={{ color: colors.brand }}>.</Text>
-          </Text>
-          <Text style={styles.tagline}>Real people. Real vibes.{"\n"}People who actually reply.</Text>
-
-          <View style={styles.buttons}>
-            <Button title="Continue with Google" icon="logo-google" variant="light" onPress={onGoogle} loading={busy} />
-            <Button title="Continue with email" icon="mail" onPress={() => router.push("/email")} />
-          </View>
-
-          <Text style={styles.legal}>
-            18+ only. By continuing you agree to our{" "}
-            <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/terms`)}>Terms</Text> and{" "}
-            <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/privacy`)}>Privacy Policy</Text>.
-          </Text>
-          {Platform.OS === "web" ? (
-            <Text style={styles.legal}>
-              On Android?{" "}
-              <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(ANDROID_APK)}>Get the app</Text>
-            </Text>
-          ) : null}
-        </View>
+        {badge}
+        {panel}
       </SafeAreaView>
     </View>
   );
 }
+
+const PANEL = 460;
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.plum },
@@ -123,6 +153,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000", shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 10,
   },
   cardPhoto: { flex: 1, borderRadius: 21, backgroundColor: "#2A1830" },
+  side: { width: PANEL, justifyContent: "center", paddingHorizontal: 48, gap: 8 },
   safe: { flex: 1, justifyContent: "space-between", paddingHorizontal: 24 },
   badge: {
     alignSelf: "center", marginTop: 12, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,

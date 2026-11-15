@@ -3,7 +3,7 @@
     "name": "Twain",
     "slug": "twain",
     "scheme": "twain",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.g41us.twain",
-      "versionCode": 10,
+      "versionCode": 11,
       "adaptiveIcon": {
         "backgroundColor": "#B42EB3",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -38,7 +38,7 @@
       "backgroundColor": "#F2F2F7"
     },
     "plugins": [
-      "expo-router",
+      ["expo-router", { "asyncRoutes": false }],
       "expo-web-browser",
       "expo-secure-store",
       [
