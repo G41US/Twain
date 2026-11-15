@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calcReplyRate } from "@/lib/matching";
 import { notify } from "@/lib/push";
+import { ping } from "@/lib/realtime";
 
 const MESSAGES_PER_MINUTE = 30;
 
@@ -33,6 +34,13 @@ export async function GET(_req: Request, { params }: Ctx) {
 
   const match = await myMatch((await params).matchId, me.id);
   if (!match) return new Response("Not found", { status: 404 });
+
+  // Opening the chat reads everything the other person sent; tell their phone so it can show "Read".
+  const seen = await prisma.message.updateMany({
+    where: { matchId: match.id, senderId: { not: me.id }, readAt: null },
+    data: { readAt: new Date() },
+  });
+  if (seen.count) await ping(match.id, "read");
 
   const messages = await prisma.message.findMany({
     where: { matchId: match.id },
@@ -70,6 +78,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const otherId = match.user1Id === me.id ? match.user2Id : match.user1Id;
   // A new message can change both people's reply rate.
   await Promise.all([
+    ping(match.id, "msg"),
     updateReplyRate(match.user1Id),
     updateReplyRate(match.user2Id),
     notify([otherId], { title: me.name ?? "New message", body: text.slice(0, 120), url: `/chat/${match.id}` }),

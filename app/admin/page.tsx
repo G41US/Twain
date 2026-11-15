@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { redirect } from "next/navigation";
 import Icon, { type IconName } from "../components/Icon";
+import AlertsButton from "./AlertsButton";
 import BanButton from "./BanButton";
 import VerifyButtons from "./VerifyButtons";
 
@@ -88,6 +89,7 @@ export default async function Admin() {
             Admin
           </span>
           <div className="ml-auto flex items-center gap-3">
+            <AlertsButton />
             <span className="hidden text-sm text-white/60 sm:block">{me.name ?? me.email}</span>
             <Avatar src={me.photos[0] ?? me.image} name={me.name} size="h-8 w-8" />
           </div>

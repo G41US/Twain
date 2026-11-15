@@ -5,7 +5,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Twain", {
       body: data.body || "",
-      icon: "/icon-192.png",
+      icon: (data.url || "").startsWith("/admin") ? "/admin-icon-192.png" : "/icon-192.png",
       badge: "/icon-192.png",
       data: { url: data.url || "/matches" },
       tag: data.url, // one notification per chat instead of a pile

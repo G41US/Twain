@@ -29,6 +29,7 @@ export default function Discover() {
   const [match, setMatch] = useState<{ matchId: string; person: Person } | null>(null);
   const [reporting, setReporting] = useState<Person | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [lastSwiped, setLastSwiped] = useState<Person | null>(null);
   const [pos] = useState(() => new Animated.ValueXY());
   const busy = useRef(false);
 
@@ -58,16 +59,32 @@ export default function Discover() {
     if (!top || busy.current) return;
     busy.current = true;
     const person = top;
+    setLastSwiped(person);
     Animated.timing(pos, { toValue: { x: (dir === "right" ? 1.5 : -1.5) * width, y: 40 }, duration: 220, useNativeDriver: false }).start(next);
     try {
       if (dir === "left") {
         await api("/api/swipe/left", { body: { targetId: person.id } });
       } else {
         const res = await api<{ matchId: string | null }>("/api/swipe/right", { body: { targetId: person.id } });
-        if (res.matchId) setMatch({ matchId: res.matchId, person });
+        if (res.matchId) { setMatch({ matchId: res.matchId, person }); setLastSwiped(null); } // a match can't be undone here
       }
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) tell("Take a breather", "You've liked a lot of people this hour. Come back a little later.");
+    }
+  };
+
+  // Bring back the last person you swiped on (server allows it for a few minutes, never after a match).
+  const undo = async () => {
+    const person = lastSwiped;
+    if (!person || busy.current) return;
+    setLastSwiped(null);
+    try {
+      await api("/api/swipe/undo", { body: { targetId: person.id } });
+      pos.setValue({ x: 0, y: 0 });
+      setPhotoIndex(0);
+      setPeople((p) => [person, ...(p ?? []).filter((x) => x.id !== person.id)]);
+    } catch (e) {
+      tell("Can't undo", e instanceof ApiError && e.status === 409 ? "You've already matched with them." : "It's been too long to undo that swipe.");
     }
   };
 
@@ -114,6 +131,7 @@ export default function Discover() {
             {error || `Try a bigger distance (now ${me?.maxDistanceKm ?? 50} km) or age range, or check back later.`}
           </T>
           <Button title="Refresh" icon="refresh" variant="secondary" onPress={() => { setPeople(null); load(); }} style={{ alignSelf: "stretch" }} />
+          {lastSwiped && !error ? <Button title={`Undo: bring back ${lastSwiped.name ?? "them"}`} icon="arrow-undo" variant="ghost" onPress={undo} /> : null}
         </View>
       ) : (
         <>
@@ -168,6 +186,7 @@ export default function Discover() {
           </View>
 
           <View style={styles.actions}>
+            <RoundButton icon="arrow-undo" label="Undo last swipe" onPress={undo} small disabled={!lastSwiped} />
             <RoundButton icon="close" label="Pass" onPress={() => swipe("left")} />
             <RoundButton icon="heart" label="Like" onPress={() => swipe("right")} primary />
           </View>
@@ -204,12 +223,14 @@ function Tag({ text, icon }: { text: string; icon?: keyof typeof Ionicons.glyphM
   );
 }
 
-function RoundButton({ icon, label, onPress, primary }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; primary?: boolean }) {
-  const size = primary ? 68 : 60;
+function RoundButton({ icon, label, onPress, primary, small, disabled }: {
+  icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; primary?: boolean; small?: boolean; disabled?: boolean;
+}) {
+  const size = primary ? 68 : small ? 46 : 60;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => [styles.round, primary && { backgroundColor: colors.brand }, { width: size, height: size, borderRadius: size / 2, transform: [{ scale: pressed ? 0.92 : 1 }] }]}>
-      <Ionicons name={icon} size={primary ? 32 : 28} color={primary ? colors.white : colors.ink} />
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled }}
+      style={({ pressed }) => [styles.round, primary && { backgroundColor: colors.brand }, { width: size, height: size, borderRadius: size / 2, opacity: disabled ? 0.4 : 1, transform: [{ scale: pressed ? 0.92 : 1 }] }]}>
+      <Ionicons name={icon} size={primary ? 32 : small ? 21 : 28} color={primary ? colors.white : small ? colors.muted : colors.ink} />
     </Pressable>
   );
 }

@@ -9,18 +9,22 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateSafetySheet } from "../../components/date-safety-sheet";
 import { ReportSheet } from "../../components/report-sheet";
 import { Avatar, Button, Screen, T } from "../../components/ui";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { api, ApiError } from "../../lib/api";
 import { ask, tell } from "../../lib/dialog";
 import { WINGMAN_STYLES } from "../../lib/options";
+import { supabase } from "../../lib/supabase";
 import { colors, font } from "../../lib/theme";
 
-type Message = { id: string; senderId: string; body: string; createdAt: string };
+type Message = { id: string; senderId: string; body: string; createdAt: string; readAt: string | null };
 type Other = { id: string; name: string | null; photos: string[]; image: string | null; verified: boolean };
 
 const STYLE_HINTS = { natural: "Relaxed and warm", witty: "Playful", direct: "Says what you mean", romantic: "Sweet, not cheesy" } as const;
 
-// shortcut: polls every 3s; switch to Supabase Realtime if chats get busy.
-const POLL_MS = 3000;
+// Live updates come over Supabase Realtime (lib/realtime.ts pings); this slow poll only covers a dropped connection.
+const POLL_MS = 15000;
+const TYPING_SEND_EVERY_MS = 2500;
+const TYPING_SHOWS_FOR_MS = 4000;
 
 export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,14 +40,20 @@ export default function Chat() {
   const [gone, setGone] = useState(false);
   const [stylePicker, setStylePicker] = useState(false);
   const [dateTips, setDateTips] = useState(false);
+  const [typing, setTyping] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
+  const meRef = useRef("");
+  const channel = useRef<RealtimeChannel | null>(null);
+  const lastTypingSent = useRef(0);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
       const data = await api<{ me: string; other: Other; messages: Message[] }>(`/api/chat/${id}`);
+      meRef.current = data.me;
       setMe(data.me);
       setOther(data.other);
-      setMessages((old) => (old && old.length === data.messages.length ? old : data.messages));
+      setMessages(data.messages);
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) setGone(true);
     }
@@ -54,6 +64,31 @@ export default function Chat() {
     const t = setInterval(load, POLL_MS);
     return () => { clearTimeout(first); clearInterval(t); };
   }, [load]);
+
+  // Server pings "msg"/"read" (no content; we refetch). The other phone sends "typing" while they type.
+  useEffect(() => {
+    const ch = supabase
+      .channel(`match:${id}`)
+      .on("broadcast", { event: "msg" }, () => { setTyping(false); load(); })
+      .on("broadcast", { event: "read" }, () => load())
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload?.from === meRef.current) return;
+        setTyping(true);
+        clearTimeout(typingTimer.current);
+        typingTimer.current = setTimeout(() => setTyping(false), TYPING_SHOWS_FOR_MS);
+      })
+      .subscribe();
+    channel.current = ch;
+    return () => { clearTimeout(typingTimer.current); supabase.removeChannel(ch); };
+  }, [id, load]);
+
+  const onType = (v: string) => {
+    setInput(v);
+    if (v.trim() && Date.now() - lastTypingSent.current > TYPING_SEND_EVERY_MS) {
+      lastTypingSent.current = Date.now();
+      channel.current?.send({ type: "broadcast", event: "typing", payload: { from: meRef.current } });
+    }
+  };
 
   const send = async () => {
     const body = input.trim();
@@ -136,14 +171,23 @@ export default function Chat() {
           {messages?.length === 0 ? (
             <Text style={styles.hint}>You matched! Say hi 👋{"\n"}Stuck? Tap the sparkles for an opener.</Text>
           ) : null}
-          {messages?.map((m) => {
+          {messages?.map((m, i) => {
             const mine = m.senderId === me;
+            const last = i === messages.length - 1;
             return (
-              <View key={m.id} style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
-                <Text style={[styles.bubbleText, mine && { color: colors.white }]}>{m.body}</Text>
+              <View key={m.id}>
+                <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
+                  <Text style={[styles.bubbleText, mine && { color: colors.white }]}>{m.body}</Text>
+                </View>
+                {mine && last ? <Text style={styles.receipt}>{m.readAt ? "Read" : "Delivered"}</Text> : null}
               </View>
             );
           })}
+          {typing ? (
+            <View style={[styles.bubble, styles.theirs, { paddingVertical: 6 }]} accessibilityLabel={`${other?.name ?? "They"} is typing`}>
+              <Ionicons name="ellipsis-horizontal" size={22} color={colors.muted} />
+            </View>
+          ) : null}
         </ScrollView>
 
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
@@ -152,7 +196,7 @@ export default function Chat() {
           </Pressable>
           <TextInput
             value={input}
-            onChangeText={setInput}
+            onChangeText={onType}
             placeholder="Message…"
             placeholderTextColor={colors.faint}
             maxLength={1000}
@@ -222,6 +266,7 @@ const styles = StyleSheet.create({
   bubble: { maxWidth: "78%", borderRadius: 19, paddingHorizontal: 13, paddingVertical: 8, marginVertical: 1 },
   mine: { alignSelf: "flex-end", backgroundColor: colors.brand, borderBottomRightRadius: 5 },
   theirs: { alignSelf: "flex-start", backgroundColor: "#E9E9EB", borderBottomLeftRadius: 5 },
+  receipt: { alignSelf: "flex-end", fontFamily: font.medium, fontSize: 11.5, color: colors.muted, marginTop: 2, marginRight: 4 },
   bubbleText: { fontFamily: font.regular, fontSize: 16, color: colors.ink, lineHeight: 21 },
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: 8, paddingHorizontal: 10, paddingTop: 8,
