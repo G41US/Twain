@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { jakarta } from "../fonts";
 import { redirect } from "next/navigation";
 import Icon, { type IconName } from "../components/Icon";
 import AlertsButton from "./AlertsButton";
@@ -9,7 +9,6 @@ import VerifyButtons from "./VerifyButtons";
 
 export const dynamic = "force-dynamic";
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 // Admin is in Lagos; server clocks are UTC.
 const when = (d: Date) =>
