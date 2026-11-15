@@ -1,15 +1,18 @@
 import { Image } from "expo-image";
+import { useAppSize } from "../components/web-frame";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { Alert, Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Alert, Animated, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui";
 import { API_URL } from "../lib/config";
 import { googleEnabled, signInWithGoogle } from "../lib/google";
 import { colors, font } from "../lib/theme";
+
+const ANDROID_APK = "https://github.com/G41US/Twain/releases/latest/download/Twain.apk";
 
 // Unsplash License (free for commercial use): Suad Kamardeen (1, 2), Baptista Ime James (3), Isaiah McClean (4).
 // Each card: photo, then left edge, width and top in collage units (one unit ≈ screen width on tall phones), tilt.
@@ -21,7 +24,7 @@ const COLLAGE = [
 ] as const;
 
 function Collage() {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useAppSize();
   // Shrink on short or wide screens so the photos always end above the logo and buttons.
   // The lowest card ends ~1.4 units down; ~330px at the bottom belongs to the logo, tagline and buttons.
   const u = Math.min(width, (height - 330) / 1.35);
@@ -101,6 +104,12 @@ export default function Welcome() {
             <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/terms`)}>Terms</Text> and{" "}
             <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/privacy`)}>Privacy Policy</Text>.
           </Text>
+          {Platform.OS === "web" ? (
+            <Text style={styles.legal}>
+              On Android?{" "}
+              <Text style={styles.link} onPress={() => WebBrowser.openBrowserAsync(ANDROID_APK)}>Get the app</Text>
+            </Text>
+          ) : null}
         </View>
       </SafeAreaView>
     </View>

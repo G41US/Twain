@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ModalFrame } from "./web-frame";
 import Constants from "expo-constants";
 import { File, Paths } from "expo-file-system";
 import { getContentUriAsync } from "expo-file-system/legacy";
@@ -74,6 +75,7 @@ export function UpdatePrompt() {
 
   return (
     <Modal visible={visible || required} transparent animationType="slide" onRequestClose={() => { if (!required && !downloading) setVisible(false); }}>
+<ModalFrame>
       <View style={styles.backdrop} />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         <Grabber />
@@ -96,7 +98,8 @@ export function UpdatePrompt() {
         {required || downloading ? null : <Button title="Later" variant="ghost" onPress={() => setVisible(false)} />}
         <T variant="small" style={{ textAlign: "center" }}>Your matches and chats stay. Tap Update when Android asks.</T>
       </View>
-    </Modal>
+    </ModalFrame>
+</Modal>
   );
 }
 

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ModalFrame } from "../../components/web-frame";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -212,6 +213,7 @@ export default function Chat() {
       </KeyboardAvoidingView>
 
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)}>
+<ModalFrame>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenu(false)}>
           <View style={[styles.menu, { top: insets.top + 56 }]}>
             <Pressable onPress={() => { setMenu(false); setDateTips(true); }} accessibilityRole="button"
@@ -227,9 +229,11 @@ export default function Chat() {
             </Pressable>
           </View>
         </Pressable>
-      </Modal>
+      </ModalFrame>
+</Modal>
 
       <Modal visible={stylePicker} transparent animationType="fade" onRequestClose={() => setStylePicker(false)}>
+<ModalFrame>
         <Pressable style={styles.menuBackdrop} onPress={() => setStylePicker(false)}>
           <View style={[styles.menu, { top: undefined, right: undefined, left: 10, bottom: insets.bottom + 60 }]}>
             <Text style={styles.menuHeader}>Suggest a message that&apos;s…</Text>
@@ -242,7 +246,8 @@ export default function Chat() {
             ))}
           </View>
         </Pressable>
-      </Modal>
+      </ModalFrame>
+</Modal>
 
       <DateSafetySheet name={other?.name ?? "them"} visible={dateTips} onClose={() => setDateTips(false)} />
       <ReportSheet target={reporting && other ? other : null} onDone={() => setReporting(false)} />

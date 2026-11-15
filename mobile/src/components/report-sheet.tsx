@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ModalFrame } from "./web-frame";
 import { KeyboardAvoidingView, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../lib/api";
@@ -44,6 +45,7 @@ export function ReportSheet({ target, onDone }: { target: { id: string; name: st
 
   return (
     <Modal visible={!!target} transparent animationType="slide" onRequestClose={() => close(false)}>
+<ModalFrame>
       {/* Edge-to-edge Android doesn't resize for the keyboard, so the sheet lifts itself above it. */}
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <Pressable style={styles.backdrop} onPress={() => close(false)} accessibilityLabel="Close" />
@@ -64,7 +66,8 @@ export function ReportSheet({ target, onDone }: { target: { id: string; name: st
         <Button title="Cancel" variant="ghost" onPress={() => close(false)} style={{ marginTop: -6 }} />
       </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </ModalFrame>
+</Modal>
   );
 }
 

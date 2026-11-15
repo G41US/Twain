@@ -1,5 +1,10 @@
+import { Platform } from "react-native";
+
 // Where the app talks to. The Supabase anon key is public by design (database rules decide what it can do).
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://twain-coral.vercel.app";
+// The web build is served by the backend itself (/app), so it calls whatever site it was loaded from.
+export const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === "web" && typeof window !== "undefined" ? window.location.origin : "https://twain-coral.vercel.app");
 export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://wnhrkkgsedcaidvwzwfq.supabase.co";
 export const SUPABASE_ANON_KEY =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||

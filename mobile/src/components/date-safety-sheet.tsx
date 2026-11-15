@@ -1,4 +1,5 @@
 import { Modal, Pressable, Share, StyleSheet, View } from "react-native";
+import { ModalFrame } from "./web-frame";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, tile } from "../lib/theme";
 import { Button, Grabber, Group, Row, T } from "./ui";
@@ -20,6 +21,7 @@ export function DateSafetySheet({ name, visible, onClose }: { name: string; visi
     });
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+<ModalFrame>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         <Grabber />
@@ -33,7 +35,8 @@ export function DateSafetySheet({ name, visible, onClose }: { name: string; visi
         <Button title="Tell a friend the plan" icon="share-outline" onPress={share} />
         <Button title="Done" variant="ghost" onPress={onClose} style={{ marginTop: -6 }} />
       </View>
-    </Modal>
+    </ModalFrame>
+</Modal>
   );
 }
 

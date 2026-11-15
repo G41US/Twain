@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import BottomNav from "./components/BottomNav";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} min-h-dvh bg-gray-50 pt-[env(safe-area-inset-top)] text-gray-900`}>
         <Providers>
           {children}
-          <BottomNav />
         </Providers>
       </body>
     </html>

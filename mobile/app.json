@@ -30,7 +30,12 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "Twain",
+      "shortName": "Twain",
+      "themeColor": "#F2F2F7",
+      "backgroundColor": "#F2F2F7"
     },
     "plugins": [
       "expo-router",
@@ -73,6 +78,9 @@
         }
       ],
       "./plugins/with-release-signing"
-    ]
+    ],
+    "experiments": {
+      "baseUrl": "/app"
+    }
   }
 }

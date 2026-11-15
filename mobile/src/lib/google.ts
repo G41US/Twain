@@ -1,5 +1,6 @@
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config";
 import { supabase } from "./supabase";
 
@@ -20,7 +21,9 @@ export async function googleEnabled() {
  * Returns an error message, or "" on success / "cancel" if the person backed out.
  */
 export async function signInWithGoogle(): Promise<string> {
-  const redirectTo = Linking.createURL("auth-callback"); // twain://auth-callback in the app
+  // App: twain://auth-callback. Web: the app lives under /app (experiments.baseUrl), which createURL leaves out.
+  const redirectTo =
+    Platform.OS === "web" ? `${window.location.origin}${process.env.EXPO_BASE_URL ?? ""}/auth-callback` : Linking.createURL("auth-callback");
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ModalFrame } from "../../components/web-frame";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
@@ -145,6 +146,7 @@ function EditSheet({ title, visible, onCancel, onSave, saving, children }: {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle={Platform.OS === "ios" ? "pageSheet" : "fullScreen"} onRequestClose={onCancel}>
+<ModalFrame>
       <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: Platform.OS === "ios" ? 0 : insets.top }}>
         <View style={styles.sheetBar}>
           <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button" style={styles.sheetSide}>
@@ -167,7 +169,8 @@ function EditSheet({ title, visible, onCancel, onSave, saving, children }: {
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
-    </Modal>
+    </ModalFrame>
+</Modal>
   );
 }
 

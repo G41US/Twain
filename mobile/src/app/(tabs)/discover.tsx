@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useAppSize , ModalFrame } from "../../components/web-frame";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Modal, PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Animated, Modal, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { VoicePlayer } from "../../components/profile-form";
 import { ReportSheet } from "../../components/report-sheet";
 import { Button, Screen, T } from "../../components/ui";
@@ -23,7 +24,7 @@ const SWIPE_OUT = 120; // px of drag that counts as a swipe
 
 export default function Discover() {
   const { me } = useProfile();
-  const { width } = useWindowDimensions();
+  const { width } = useAppSize();
   const [people, setPeople] = useState<Person[] | null>(null);
   const [error, setError] = useState("");
   const [match, setMatch] = useState<{ matchId: string; person: Person } | null>(null);
@@ -196,6 +197,7 @@ export default function Discover() {
       <ReportSheet target={reporting} onDone={(sent) => { setReporting(null); if (sent) next(); }} />
 
       <Modal visible={!!match} transparent animationType="fade" onRequestClose={() => setMatch(null)}>
+<ModalFrame>
         <View style={styles.matchWrap}>
           <Text style={styles.matchTitle}>It&apos;s a match</Text>
           <Text style={styles.matchSub}>You and {match?.person.name ?? "they"} like each other.</Text>
@@ -207,7 +209,8 @@ export default function Discover() {
             onPress={() => { const id = match!.matchId; setMatch(null); router.push(`/chat/${id}`); }} style={{ alignSelf: "stretch" }} />
           <Button title="Keep swiping" variant="clear" onPress={() => setMatch(null)} style={{ alignSelf: "stretch" }} />
         </View>
-      </Modal>
+      </ModalFrame>
+</Modal>
     </Screen>
   );
 }

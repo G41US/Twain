@@ -11,6 +11,7 @@ import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button, Screen, T } from "../components/ui";
 import { UpdatePrompt } from "../components/update-prompt";
+import { WebFrame } from "../components/web-frame";
 import { isComplete, ProfileProvider, useProfile } from "../ctx/profile";
 import { SessionProvider, useSession } from "../ctx/session";
 import { colors } from "../lib/theme";
@@ -24,11 +25,13 @@ export default function RootLayout() {
   });
   return (
     <SafeAreaProvider>
+      <WebFrame>
       <SessionProvider>
         <ProfileProvider>
           <Navigator fontsLoaded={fontsLoaded} />
         </ProfileProvider>
       </SessionProvider>
+      </WebFrame>
     </SafeAreaProvider>
   );
 }

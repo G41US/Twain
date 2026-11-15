@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build:web-app && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "test": "tsx --test lib/*.test.ts",
-    "seed": "node --env-file-if-exists=.env prisma/seed.mjs"
+    "seed": "node --env-file-if-exists=.env prisma/seed.mjs",
+    "build:web-app": "cd mobile && npm ci --no-audit --no-fund && npx expo export -p web --output-dir ../public/app"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
