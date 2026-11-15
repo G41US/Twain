@@ -24,6 +24,13 @@ export async function signInWithGoogle(): Promise<string> {
   // App: twain://auth-callback. Web: the app lives under /app (experiments.baseUrl), which createURL leaves out.
   const redirectTo =
     Platform.OS === "web" ? `${window.location.origin}${process.env.EXPO_BASE_URL ?? ""}/auth-callback` : Linking.createURL("auth-callback");
+  // Web: go to Google in this same tab and come back to /auth-callback. Pop-ups get blocked on phones,
+  // and Google's pages cut the link back to the page that opened them, which left sign-in spinning.
+  if (Platform.OS === "web") {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+    return error?.message ?? "cancel"; // on success the page is already leaving
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, skipBrowserRedirect: true },
