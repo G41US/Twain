@@ -8,14 +8,17 @@ import {
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { colors, font } from "../lib/theme";
+import { CONTENT, useWide } from "./web-frame";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 /** Page wrapper: keeps content clear of the status bar / notch / gesture bar. */
 export function Screen({ children, edges = ["top"], style }: { children: ReactNode; edges?: Edge[]; style?: StyleProp<ViewStyle> }) {
+  const wide = useWide();
   return (
-    <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: colors.bg }, style]}>
-      {children}
+    <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: colors.bg }, !wide && style]}>
+      {/* Computers: content in a centred column; the screen's own background colours the column only. */}
+      {wide ? <View style={[{ flex: 1, width: "100%", maxWidth: CONTENT, alignSelf: "center" }, style]}>{children}</View> : children}
     </SafeAreaView>
   );
 }

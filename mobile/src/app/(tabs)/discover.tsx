@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useAppSize , ModalFrame } from "../../components/web-frame";
+import { ModalFrame, useAppSize, useWide } from "../../components/web-frame";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -25,6 +25,7 @@ const SWIPE_OUT = 120; // px of drag that counts as a swipe
 export default function Discover() {
   const { me } = useProfile();
   const { width } = useAppSize();
+  const wide = useWide();
   const [people, setPeople] = useState<Person[] | null>(null);
   const [error, setError] = useState("");
   const [match, setMatch] = useState<{ matchId: string; person: Person } | null>(null);
@@ -118,7 +119,8 @@ export default function Discover() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.logo}>Twain<Text style={{ color: colors.brand }}>.</Text></Text>
+        {/* Computers show the logo in the sidebar. */}
+        {wide ? <T variant="title">Discover</T> : <Text style={styles.logo}>Twain<Text style={{ color: colors.brand }}>.</Text></Text>}
         <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Edit preferences" hitSlop={10}>
           <Ionicons name="options-outline" size={26} color={colors.ink} />
         </Pressable>
@@ -136,7 +138,7 @@ export default function Discover() {
         </View>
       ) : (
         <>
-          <View style={styles.deck}>
+          <View style={[styles.deck, { width: Math.min(width, 480) - 24 }]}>
             {people[1] ? (
               <Animated.View style={[styles.card, { transform: [{ scale: nextScale }] }]}>
                 <Image source={people[1].photos[0]} style={StyleSheet.absoluteFill} contentFit="cover" />
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 8 },
   logo: { fontFamily: font.black, fontSize: 30, color: colors.ink, letterSpacing: -1.2 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 },
-  deck: { flex: 1, marginHorizontal: 12, marginTop: 4 },
+  deck: { flex: 1, alignSelf: "center", marginTop: 4 },
   card: { ...StyleSheet.absoluteFill, borderRadius: 24, overflow: "hidden", backgroundColor: "#1C1C1E" },
   dots: { position: "absolute", top: 10, left: 12, right: 12, flexDirection: "row", gap: 4 },
   dot: { flex: 1, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.4)" },

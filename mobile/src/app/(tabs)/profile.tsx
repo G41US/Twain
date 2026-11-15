@@ -145,8 +145,8 @@ function EditSheet({ title, visible, onCancel, onSave, saving, children }: {
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle={Platform.OS === "ios" ? "pageSheet" : "fullScreen"} onRequestClose={onCancel}>
-<ModalFrame>
+    <Modal visible={visible} transparent={Platform.OS === "web"} animationType="slide" presentationStyle={Platform.OS === "ios" ? "pageSheet" : "fullScreen"} onRequestClose={onCancel}>
+<ModalFrame tall>
       <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: Platform.OS === "ios" ? 0 : insets.top }}>
         <View style={styles.sheetBar}>
           <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button" style={styles.sheetSide}>

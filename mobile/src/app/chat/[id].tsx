@@ -213,7 +213,7 @@ export default function Chat() {
       </KeyboardAvoidingView>
 
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)}>
-<ModalFrame>
+<ModalFrame inline>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenu(false)}>
           <View style={[styles.menu, { top: insets.top + 56 }]}>
             <Pressable onPress={() => { setMenu(false); setDateTips(true); }} accessibilityRole="button"
@@ -233,7 +233,7 @@ export default function Chat() {
 </Modal>
 
       <Modal visible={stylePicker} transparent animationType="fade" onRequestClose={() => setStylePicker(false)}>
-<ModalFrame>
+<ModalFrame inline>
         <Pressable style={styles.menuBackdrop} onPress={() => setStylePicker(false)}>
           <View style={[styles.menu, { top: undefined, right: undefined, left: 10, bottom: insets.bottom + 60 }]}>
             <Text style={styles.menuHeader}>Suggest a message that&apos;s…</Text>
