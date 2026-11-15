@@ -13,13 +13,13 @@ import { CONTENT, useWide } from "./web-frame";
 type IconName = keyof typeof Ionicons.glyphMap;
 
 /** Page wrapper: keeps content clear of the status bar / notch / gesture bar. */
-/** `narrow`: a slimmer column on computers, for forms. */
-export function Screen({ children, edges = ["top"], style, narrow }: { children: ReactNode; edges?: Edge[]; style?: StyleProp<ViewStyle>; narrow?: boolean }) {
+/** `max`: width of the content column on computers (forms are slimmer, split views wider). */
+export function Screen({ children, edges = ["top"], style, max = CONTENT }: { children: ReactNode; edges?: Edge[]; style?: StyleProp<ViewStyle>; max?: number }) {
   const wide = useWide();
   return (
     <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: colors.bg }, !wide && style]}>
       {/* Computers: content in a centred column; the screen's own background colours the column only. */}
-      {wide ? <View style={[{ flex: 1, width: "100%", maxWidth: narrow ? 560 : CONTENT, alignSelf: "center", paddingTop: narrow ? 32 : 0 }, style]}>{children}</View> : children}
+      {wide ? <View style={[{ flex: 1, width: "100%", maxWidth: max, alignSelf: "center", paddingTop: max < CONTENT ? 32 : 0 }, style]}>{children}</View> : children}
     </SafeAreaView>
   );
 }

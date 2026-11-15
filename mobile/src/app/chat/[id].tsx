@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ModalFrame } from "../../components/web-frame";
-import { router, useLocalSearchParams } from "expo-router";
+import { ModalFrame, useWide } from "../../components/web-frame";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator, KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
@@ -27,8 +27,18 @@ const POLL_MS = 15000;
 const TYPING_SEND_EVERY_MS = 2500;
 const TYPING_SHOWS_FOR_MS = 4000;
 
-export default function Chat() {
+export default function ChatRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const wide = useWide();
+  // Computers: chats open beside the match list.
+  if (wide) return <Redirect href={{ pathname: "/matches", params: { c: id } }} />;
+  return <Chat id={id} />;
+}
+
+/** One conversation. `onClose` set = shown inside the match list on a computer (no back button). */
+export function Chat({ id, onClose }: { id: string; onClose?: () => void }) {
+  const wide = useWide();
+  const leave = onClose ?? (() => router.back());
   const insets = useSafeAreaInsets();
   const [me, setMe] = useState("");
   const [other, setOther] = useState<Other | null>(null);
@@ -122,7 +132,7 @@ export default function Chat() {
     if (!other || !(await ask(`Block ${other.name ?? "this person"}?`, "You'll unmatch and they won't see you again.", "Block", true))) return;
     try {
       await api("/api/block", { body: { targetId: other.id } });
-      router.back();
+      leave();
     } catch {
       tell("Couldn't block", "Check your connection and try again.");
     }
@@ -133,7 +143,7 @@ export default function Chat() {
       <Screen>
         <View style={styles.center}>
           <T variant="h2">This chat is no longer available</T>
-          <Button title="Back to matches" variant="secondary" onPress={() => router.back()} style={{ alignSelf: "stretch" }} />
+          <Button title="Back to matches" variant="secondary" onPress={leave} style={{ alignSelf: "stretch" }} />
         </View>
       </Screen>
     );
@@ -142,9 +152,13 @@ export default function Chat() {
   return (
     <Screen edges={["top"]} style={{ backgroundColor: colors.white }}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10} style={styles.navSide}>
-          <Ionicons name="chevron-back" size={30} color={colors.brand} />
-        </Pressable>
+        <View style={styles.navSide}>
+          {onClose ? null : (
+            <Pressable onPress={leave} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
+              <Ionicons name="chevron-back" size={30} color={colors.brand} />
+            </Pressable>
+          )}
+        </View>
         <View style={styles.who}>
           <Avatar uri={other?.photos[0] || other?.image} name={other?.name} size={38} />
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
@@ -213,9 +227,9 @@ export default function Chat() {
       </KeyboardAvoidingView>
 
       <Modal visible={menu} transparent animationType="fade" onRequestClose={() => setMenu(false)}>
-<ModalFrame inline>
-        <Pressable style={styles.menuBackdrop} onPress={() => setMenu(false)}>
-          <View style={[styles.menu, { top: insets.top + 56 }]}>
+<ModalFrame inline={!wide} onClose={() => setMenu(false)}>
+        <Pressable style={!wide && styles.menuBackdrop} onPress={() => setMenu(false)}>
+          <View style={wide ? styles.menuCard : [styles.menu, { top: insets.top + 56 }]}>
             <Pressable onPress={() => { setMenu(false); setDateTips(true); }} accessibilityRole="button"
               style={({ pressed }) => [styles.menuItem, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.hairline }, pressed && { backgroundColor: colors.bg }]}>
               <Text style={styles.menuText}>Planning to meet?</Text><Ionicons name="calendar-outline" size={19} color={colors.ink} />
@@ -233,9 +247,9 @@ export default function Chat() {
 </Modal>
 
       <Modal visible={stylePicker} transparent animationType="fade" onRequestClose={() => setStylePicker(false)}>
-<ModalFrame inline>
-        <Pressable style={styles.menuBackdrop} onPress={() => setStylePicker(false)}>
-          <View style={[styles.menu, { top: undefined, right: undefined, left: 10, bottom: insets.bottom + 60 }]}>
+<ModalFrame inline={!wide} onClose={() => setStylePicker(false)}>
+        <Pressable style={!wide && styles.menuBackdrop} onPress={() => setStylePicker(false)}>
+          <View style={wide ? styles.menuCard : [styles.menu, { top: undefined, right: undefined, left: 10, bottom: insets.bottom + 60 }]}>
             <Text style={styles.menuHeader}>Suggest a message that&apos;s…</Text>
             {WINGMAN_STYLES.map((st, i) => (
               <Pressable key={st} onPress={() => wingman(st)} accessibilityRole="button"
@@ -288,6 +302,7 @@ const styles = StyleSheet.create({
     position: "absolute", right: 12, backgroundColor: colors.white, borderRadius: 14, minWidth: 220, overflow: "hidden",
     elevation: 8, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 24, shadowOffset: { width: 0, height: 8 },
   },
+  menuCard: { backgroundColor: colors.white },
   menuItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 16, paddingVertical: 13 },
   menuText: { fontFamily: font.regular, fontSize: 16, color: colors.ink },
   menuHint: { fontFamily: font.regular, fontSize: 13.5, color: colors.muted },

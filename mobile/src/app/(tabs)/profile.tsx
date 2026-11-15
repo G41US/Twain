@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ModalFrame } from "../../components/web-frame";
+import { ModalFrame, useWide } from "../../components/web-frame";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
@@ -35,6 +35,8 @@ export default function Profile() {
   const [open, setOpen] = useState<Step | "Verify" | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const wide = useWide();
+  const web = Platform.OS === "web";
 
   if (!me) return null;
   const set = (p: Partial<Form>) => { setError(""); setForm((f) => ({ ...f, ...p })); };
@@ -78,28 +80,30 @@ export default function Profile() {
   const link = (path: string) => () => WebBrowser.openBrowserAsync(`${API_URL}${path}`);
   const verifyValue = me.verified ? "Verified" : me.selfieStatus === "pending" ? "In review" : "";
 
-  return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <T variant="title" style={{ marginLeft: 4 }}>Profile</T>
-
+  // Computers: you on the left, settings on the right.
+  const you = (
+    <>
         <Pressable onPress={() => setOpen("Photos")} accessibilityRole="button" accessibilityLabel="Edit photos"
-          style={({ pressed }) => [styles.me, pressed && { backgroundColor: "#E5E5EA" }]}>
-          <Avatar uri={form.photos[0]} name={me.name} size={62} />
-          <View style={{ flex: 1, minWidth: 0 }}>
+          style={({ pressed }) => [styles.me, wide && styles.meWide, pressed && { backgroundColor: "#E5E5EA" }]}>
+          <Avatar uri={form.photos[0]} name={me.name} size={wide ? 112 : 62} />
+          <View style={wide ? { alignItems: "center", maxWidth: "100%" } : { flex: 1, minWidth: 0 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <Text style={styles.meName} numberOfLines={1}>{me.name || "You"}{me.age ? `, ${me.age}` : ""}</Text>
               {me.verified ? <Ionicons name="checkmark-circle" size={18} color={colors.verified} accessibilityLabel="Verified" /> : null}
             </View>
             <Text style={styles.meSub} numberOfLines={1}>{me.email}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.hairline} />
+          {wide ? <Text style={styles.meEdit}>Edit photos</Text> : <Ionicons name="chevron-forward" size={18} color={colors.hairline} />}
         </Pressable>
 
         <Group footer={me.verified ? undefined : "Verified profiles get more trust and more matches."}>
           <Row icon="checkmark-circle" tint={tile.blue} title="Verification" value={verifyValue} last
             onPress={me.verified || me.selfieStatus === "pending" ? undefined : () => setOpen("Verify")} chevron={!me.verified && me.selfieStatus !== "pending"} />
         </Group>
+    </>
+  );
+  const settings = (
+    <>
 
         <Group header="Your profile">
           {SECTIONS.map(({ step, icon, tint }, i) => (
@@ -107,7 +111,7 @@ export default function Profile() {
           ))}
         </Group>
 
-        <NotificationsCard />
+        {web ? null : <NotificationsCard />}
 
         <Group>
           {me.isAdmin ? <Row icon="shield-checkmark" tint={tile.indigo} title="Admin dashboard" onPress={link("/admin")} /> : null}
@@ -115,14 +119,29 @@ export default function Profile() {
           <Row icon="lock-closed" tint={tile.gray} title="Privacy" onPress={link("/privacy")} last />
         </Group>
 
-        <Group footer={`Twain ${installedVersion}`}>
-          <Row icon="arrow-down-circle" tint={tile.green} title="Check for updates" onPress={() => checkForUpdate(true)} last />
-        </Group>
+        {web ? null : (
+          <Group footer={`Twain ${installedVersion}`}>
+            <Row icon="arrow-down-circle" tint={tile.green} title="Check for updates" onPress={() => checkForUpdate(true)} last />
+          </Group>
+        )}
 
         <Group>
           <Row title="Sign out" onPress={signOut} chevron={false} />
           <Row title="Delete account" onPress={remove} chevron={false} destructive last />
         </Group>
+    </>
+  );
+
+  return (
+    <Screen max={wide ? 1000 : undefined}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <T variant="title" style={{ marginLeft: 4 }}>Profile</T>
+        {wide ? (
+          <View style={styles.columns}>
+            <View style={styles.left}>{you}</View>
+            <View style={styles.right}>{settings}</View>
+          </View>
+        ) : <>{you}{settings}</>}
       </ScrollView>
 
       <EditSheet
@@ -234,6 +253,11 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 24 },
   me: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.card, borderRadius: 12, padding: 14, marginTop: -8 },
   meName: { fontFamily: font.semibold, fontSize: 20, color: colors.ink, flexShrink: 1, letterSpacing: -0.3 },
+  meWide: { flexDirection: "column", paddingVertical: 28, marginTop: 0, gap: 12 },
+  meEdit: { fontFamily: font.semibold, fontSize: 15, color: colors.brand },
+  columns: { flexDirection: "row", gap: 28, alignItems: "flex-start" },
+  left: { width: 320, gap: 24 },
+  right: { flex: 1, gap: 24, minWidth: 0 },
   meSub: { fontFamily: font.regular, fontSize: 14, color: colors.muted, marginTop: 2 },
   pose: { backgroundColor: colors.card, borderRadius: 12, padding: 16 },
   poseText: { fontFamily: font.bold, fontSize: 18, color: colors.ink, textAlign: "center" },

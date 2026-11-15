@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { colors } from "../lib/theme";
 
 // Phone browsers get the app edge to edge. Computers get a desktop layout on every screen
@@ -34,15 +34,17 @@ export function useAppSize() {
 /**
  * Wraps modal content on the web (web modals cover the whole browser window).
  * Phone browsers: the phone column. Computers: a centred card over a dimmed page;
- * `tall` gives the card a fixed height for full-screen editors, `inline` keeps it over the content column (popover menus).
+ * `tall` gives the card a fixed height for full-screen editors, `inline` keeps it over the content column (popover menus),
+ * `onClose` lets a click on the dimmed page close it.
  */
-export function ModalFrame({ children, tall, inline }: { children: ReactNode; tall?: boolean; inline?: boolean }) {
+export function ModalFrame({ children, tall, inline, onClose }: { children: ReactNode; tall?: boolean; inline?: boolean; onClose?: () => void }) {
   const wide = useWide();
   if (Platform.OS !== "web") return children;
   if (!wide) return <View style={styles.modal}>{children}</View>;
   if (inline) return <View style={[styles.modal, { maxWidth: CONTENT }]}>{children}</View>;
   return (
     <View style={styles.dim}>
+      {onClose ? <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" /> : null}
       <View style={[styles.card, tall && styles.tall]}>{children}</View>
     </View>
   );

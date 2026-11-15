@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { Avatar, Screen, T } from "../../components/ui";
+import { useWide } from "../../components/web-frame";
+import { Chat } from "../chat/[id]";
 import { api } from "../../lib/api";
 import { colors, font } from "../../lib/theme";
 
@@ -15,6 +17,8 @@ type MatchItem = {
 export default function Matches() {
   const [items, setItems] = useState<MatchItem[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const wide = useWide();
+  const { c: openId } = useLocalSearchParams<{ c?: string }>(); // computers: the chat open beside the list
 
   const load = useCallback(async () => {
     try {
@@ -26,8 +30,8 @@ export default function Matches() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  return (
-    <Screen style={{ backgroundColor: colors.white }}>
+  const list = (
+    <>
       <T variant="title" style={styles.title}>Matches</T>
       {items === null ? (
         <ActivityIndicator color={colors.brand} style={{ marginTop: 40 }} />
@@ -46,10 +50,10 @@ export default function Matches() {
           }
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => router.push(`/chat/${item.matchId}`)}
+              onPress={() => (wide ? router.setParams({ c: item.matchId }) : router.push(`/chat/${item.matchId}`))}
               accessibilityRole="button"
               accessibilityLabel={`Chat with ${item.user.name ?? "your match"}`}
-              style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.bg }]}
+              style={({ pressed }) => [styles.row, (pressed || (wide && item.matchId === openId)) && { backgroundColor: colors.bg }]}
             >
               <Avatar uri={item.user.photos[0] || item.user.image} name={item.user.name} size={54} />
               <View style={styles.rowBody}>
@@ -68,11 +72,32 @@ export default function Matches() {
           )}
         />
       )}
+    </>
+  );
+
+  if (!wide) return <Screen style={{ backgroundColor: colors.white }}>{list}</Screen>;
+  return (
+    <Screen max={1180}>
+      <View style={styles.split}>
+        <View style={styles.listPane}>{list}</View>
+        <View style={{ flex: 1 }}>
+          {openId ? (
+            <Chat key={openId} id={openId} onClose={() => { router.setParams({ c: "" }); load(); }} />
+          ) : (
+            <View style={styles.empty}>
+              <Ionicons name="chatbubble-ellipses-outline" size={52} color={colors.hairline} />
+              <T variant="small">{items?.length ? "Pick a conversation." : "Your chats will show here."}</T>
+            </View>
+          )}
+        </View>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  split: { flex: 1, flexDirection: "row", backgroundColor: colors.white, borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline },
+  listPane: { width: 340, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: colors.hairline },
   title: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10, padding: 32 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 16 },

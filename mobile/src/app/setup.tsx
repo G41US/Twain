@@ -1,15 +1,18 @@
 import { useRef, useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import type { ScrollViewInstance } from "react-native";
 import { NotificationsCard } from "../components/notifications-card";
 import {
-  AboutSection, formFrom, PhotosSection, PreferencesSection, saveSteps, STEPS, VibesSection, VoiceSection, WelcomeSection, WhereSection,
+  AboutSection, formFrom, PhotosSection, PreferencesSection, saveSteps, STEPS as ALL_STEPS, VibesSection, VoiceSection, WelcomeSection, WhereSection,
   type Form, type Step,
 } from "../components/profile-form";
 import { Button, Notice, Screen, T } from "../components/ui";
 import { useProfile } from "../ctx/profile";
 import { useSession } from "../ctx/session";
 import { colors } from "../lib/theme";
+
+// Browsers can't get Twain notifications, so the web skips that step.
+const STEPS = Platform.OS === "web" ? ALL_STEPS.filter((s) => s !== "Notifications") : ALL_STEPS;
 
 // First-run setup: one step per screen, each saved as you go so nothing is lost if the app closes.
 export default function Setup() {
@@ -54,7 +57,7 @@ export default function Setup() {
   };
 
   return (
-    <Screen edges={["top", "bottom"]} narrow>
+    <Screen edges={["top", "bottom"]} max={560}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.progress} accessibilityLabel={`Step ${step + 1} of ${STEPS.length}`}>
           {STEPS.map((s, i) => <View key={s} style={[styles.bar, i <= step && { backgroundColor: colors.brand }]} />)}
